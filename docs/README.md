@@ -95,8 +95,8 @@ options win over the environment variables, and the environment variables over t
 
 ## The Report
 
-- [Sample report (English, PDF)](/report-sample.pdf)
-- [Sample report (Japanese, PDF)](/report-sample-ja.pdf)
+- [Sample report (English, PDF)](https://pieceofcake2.github.io/security-sca/report-sample.pdf)
+- [Sample report (Japanese, PDF)](https://pieceofcake2.github.io/security-sca/report-sample-ja.pdf)
 
 ![The cover, the vulnerabilities by risk and the page of a vulnerability](img/report-sample.png)
 

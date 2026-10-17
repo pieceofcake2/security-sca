@@ -88,8 +88,8 @@ return [
 
 ## 報告書
 
-- [見本の報告書 (日本語、PDF)](/report-sample-ja.pdf)
-- [見本の報告書 (英語、PDF)](/report-sample.pdf)
+- [見本の報告書 (日本語、PDF)](https://pieceofcake2.github.io/security-sca/report-sample-ja.pdf)
+- [見本の報告書 (英語、PDF)](https://pieceofcake2.github.io/security-sca/report-sample.pdf)
 
 ![表紙、リスク別の脆弱性、脆弱性のページ](../img/report-sample-ja.png)
 
