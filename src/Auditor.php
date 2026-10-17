@@ -17,6 +17,12 @@ use RuntimeException;
 final class Auditor
 {
     /**
+     * The oldest Composer that this package supports: `composer audit --abandoned` (2.8) and the risks of the
+     * advisories (2.7)
+     */
+    public const COMPOSER_VERSION = '2.8.0';
+
+    /**
      * @var \Closure(array<string>, string): array{0: int, 1: string, 2: string}
      */
     private Closure $run;
@@ -49,6 +55,12 @@ final class Auditor
         }
         $installed = self::installed($lock, $noDev);
 
+        [$versionCode, $versionOutput] = ($this->run)([$this->composer, '--version', '--no-ansi'], $dir);
+        $version = $versionCode === 0 && preg_match('/(\d+\.\d+\.\d+\S*)/', $versionOutput, $matches) ? $matches[1] : null;
+        if ($version !== null && version_compare($version, self::COMPOSER_VERSION, '<')) {
+            throw new RuntimeException(sprintf('Composer %s or later is needed (for the abandoned packages and the risks of composer audit), %s is installed: update it with composer self-update.', self::COMPOSER_VERSION, $version));
+        }
+
         $command = [$this->composer, 'audit', '--locked', '--format=json', '--no-interaction', '--no-plugins', '--abandoned=report'];
         if ($noDev) {
             $command[] = '--no-dev';
@@ -64,14 +76,16 @@ final class Auditor
             throw new RuntimeException('composer audit did not return a JSON object.');
         }
 
-        [$versionCode, $version] = ($this->run)([$this->composer, '--version', '--no-ansi'], $dir);
+        $advisories = array_merge(self::advisories($data['advisories'] ?? [], $installed), self::filtered($data['filter'] ?? [], $installed));
+        usort($advisories, [self::class, 'compare']);
 
         return new AuditResult(
-            self::advisories($data['advisories'] ?? [], $installed),
+            $advisories,
             self::abandoned($data['abandoned'] ?? []),
             count($installed),
-            $versionCode === 0 && preg_match('/(\d+\.\d+\.\d+\S*)/', $version, $matches) ? $matches[1] : null,
+            $version,
             self::packages($lock, $noDev, $dir . DIRECTORY_SEPARATOR . 'composer.json'),
+            array_values(array_map('strval', array_filter((array)($data['unreachable-repositories'] ?? []), 'is_scalar'))),
         );
     }
 
@@ -112,9 +126,58 @@ final class Auditor
                 );
             }
         }
-        usort($advisories, static fn(Advisory $a, Advisory $b): int => [Severity::rank($a->severity), $a->package, $a->name()] <=> [Severity::rank($b->severity), $b->package, $b->name()]);
+        usort($advisories, [self::class, 'compare']);
 
         return $advisories;
+    }
+
+    /**
+     * The packages that the filter lists of Composer (2.10+) matched, e.g. a list of malware, as critical advisories
+     *
+     * @param mixed $data `filter` of the JSON: the entries of the lists by package
+     * @param array<string, string> $installed Installed versions by package
+     * @return array<\PieceOfCake2\SecuritySca\Advisory>
+     */
+    public static function filtered(mixed $data, array $installed = []): array
+    {
+        $advisories = [];
+        foreach (is_array($data) ? $data : [] as $package => $entries) {
+            foreach (is_array($entries) ? $entries : [] as $entry) {
+                if (!is_array($entry)) {
+                    continue;
+                }
+                $name = (string)($entry['packageName'] ?? $package);
+                $list = (string)($entry['listName'] ?? 'filter');
+                $id = self::string($entry['id'] ?? null);
+                $reason = self::string($entry['reason'] ?? null);
+                $advisories[] = new Advisory(
+                    $id ?? $list,
+                    $name,
+                    sprintf('Listed in %s%s', $list, $reason !== null ? ': ' . $reason : ''),
+                    Severity::CRITICAL,
+                    null,
+                    (string)($entry['constraint'] ?? ''),
+                    $installed[$name] ?? $installed[strtolower($name)] ?? null,
+                    null,
+                    self::string($entry['url'] ?? null),
+                    [['name' => $list, 'id' => $id ?? $name]],
+                );
+            }
+        }
+
+        return $advisories;
+    }
+
+    /**
+     * The order of the advisories: from the highest risk, then by package and name
+     *
+     * @param \PieceOfCake2\SecuritySca\Advisory $a Advisory
+     * @param \PieceOfCake2\SecuritySca\Advisory $b Advisory
+     * @return int
+     */
+    public static function compare(Advisory $a, Advisory $b): int
+    {
+        return [Severity::rank($a->severity), $a->package, $a->name()] <=> [Severity::rank($b->severity), $b->package, $b->name()];
     }
 
     /**
@@ -131,7 +194,8 @@ final class Auditor
         $project = $json !== null && is_file($json) ? json_decode((string)file_get_contents($json), true) : null;
         $required = [];
         foreach (['require', 'require-dev'] as $key) {
-            $required += is_array($project) && is_array($project[$key] ?? null) ? $project[$key] : [];
+            // Package names are case insensitive for Composer
+            $required += array_change_key_case(is_array($project) && is_array($project[$key] ?? null) ? $project[$key] : []);
         }
         $packages = [];
         foreach ($noDev ? ['packages'] : ['packages', 'packages-dev'] as $key) {
@@ -144,7 +208,7 @@ final class Auditor
                     $name,
                     (string)$package['version'],
                     $key === 'packages-dev',
-                    isset($required[$name]),
+                    isset($required[strtolower($name)]),
                     array_values(array_map('strval', array_filter((array)($package['license'] ?? []), 'is_scalar'))),
                 );
             }

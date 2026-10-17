@@ -42,5 +42,7 @@
     "kind.direct": "direct",
     "kind.indirect": "indirect",
     "state.vulnerabilities": "{count} vulnerabilities",
-    "packages.count": "Packages"
+    "packages.count": "Packages",
+    "field.unreachable": "Unreachable repositories",
+    "unreachable.warning": "Their advisories could not be checked"
 }

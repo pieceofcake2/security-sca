@@ -35,7 +35,8 @@ class AuditorTest extends TestCase
         $commands = [];
         $result = self::auditor($commands)->audit(self::PROJECT);
 
-        $this->assertSame(['composer', 'audit', '--locked', '--format=json', '--no-interaction', '--no-plugins', '--abandoned=report'], $commands[0]);
+        $this->assertSame(['composer', '--version', '--no-ansi'], $commands[0]);
+        $this->assertSame(['composer', 'audit', '--locked', '--format=json', '--no-interaction', '--no-plugins', '--abandoned=report'], $commands[1]);
         $this->assertCount(6, $result->advisories);
         $this->assertSame(5, $result->packages);
         $this->assertSame('2.8.12', $result->composerVersion);
@@ -72,8 +73,62 @@ class AuditorTest extends TestCase
         $commands = [];
         $result = self::auditor($commands)->audit(self::PROJECT, true);
 
-        $this->assertContains('--no-dev', $commands[0]);
+        $this->assertContains('--no-dev', $commands[1]);
         $this->assertSame(4, $result->packages);
+    }
+
+    public function testOldComposer(): void
+    {
+        $auditor = new Auditor('composer', static fn(array $command, string $dir): array => [0, 'Composer version 2.7.9 2024-09-04 14:43:28', '']);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Composer 2.8.0 or later is needed');
+
+        $auditor->audit(self::PROJECT);
+    }
+
+    public function testFilterAndUnreachableRepositories(): void
+    {
+        $output = (string)json_encode([
+            'advisories' => [],
+            'abandoned' => [],
+            'filter' => [
+                'Symfony/Debug' => [[
+                    'packageName' => 'Symfony/Debug',
+                    'listName' => 'malware',
+                    'constraint' => '>=4.4',
+                    'url' => 'https://example.com/malware/1',
+                    'reason' => 'Steals credentials',
+                    'id' => 'MAL-1',
+                    'source' => 'example',
+                ]],
+            ],
+            'unreachable-repositories' => ['https://repo.example.com'],
+        ]);
+        $commands = [];
+        $result = self::auditor($commands, $output)->audit(self::PROJECT);
+
+        $this->assertCount(1, $result->advisories);
+        $advisory = $result->advisories[0];
+        $this->assertSame('critical', $advisory->severity);
+        $this->assertSame('MAL-1', $advisory->id);
+        $this->assertSame('Listed in malware: Steals credentials', $advisory->title);
+        $this->assertSame('v4.4.44', $advisory->installedVersion);
+        $this->assertSame('https://example.com/malware/1', $advisory->link);
+        $this->assertSame(['https://repo.example.com'], $result->unreachable);
+        $this->assertTrue($result->fails('critical'));
+    }
+
+    public function testDirectIsCaseInsensitive(): void
+    {
+        $dir = TMP . 'case' . DS;
+        is_dir($dir) || mkdir($dir);
+        copy(self::PROJECT . DS . 'composer.lock', $dir . 'composer.lock');
+        file_put_contents($dir . 'composer.json', '{"require": {"PHPMailer/PHPMailer": "^6.0"}}');
+
+        $packages = self::auditor()->audit($dir)->packageList;
+
+        $this->assertTrue($packages[0]->direct);
     }
 
     public function testFails(): void

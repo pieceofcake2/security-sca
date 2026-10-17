@@ -23,7 +23,7 @@ vendor/bin/security-sca --pdf=tmp/security-sca.pdf --fail-on=high
 
 ## Requirements
 
-* PHP 8.0+ and Composer 2.4+
+* PHP 8.0+ and Composer 2.8+
 * Google Chrome or Chromium 131+
 
 ## Installation

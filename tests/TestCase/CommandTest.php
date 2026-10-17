@@ -69,6 +69,15 @@ class CommandTest extends TestCase
         $this->assertTrue($config->noDev);
     }
 
+    public function testNoDevOff(): void
+    {
+        $project = __DIR__ . DS . '..' . DS . 'fixtures' . DS . 'settings';
+        $config = Command::config(['--project=' . $project, '--no-dev=0']);
+
+        $this->assertNotNull($config);
+        $this->assertFalse($config->noDev);
+    }
+
     public function testInvalidOptions(): void
     {
         $this->assertNull(Command::config(['--help']));

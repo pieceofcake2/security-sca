@@ -71,6 +71,9 @@ final class ReportBuilder
 
         $target = $cover->target($environment);
         $target[] = new Row($this->t('field.packages'), (string)$result->packages);
+        if ($result->unreachable !== []) {
+            $target[] = new Row($this->t('field.unreachable'), implode(', ', $result->unreachable), warning: $this->t('unreachable.warning'), monoValue: true);
+        }
         $target[] = new Row($this->t('field.threshold'), $config->failOn === 'none'
             ? $this->t('threshold.none')
             : $this->t('threshold.value', ['severity' => $this->t('severity.' . $config->failOn)]));
