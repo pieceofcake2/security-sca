@@ -1,0 +1,128 @@
+{
+    "advisories": {
+        "phpmailer/phpmailer": [
+            {
+                "advisoryId": "PKSA-35kn-2ddp-d3p4",
+                "packageName": "phpmailer/phpmailer",
+                "affectedVersions": "<6.5.0",
+                "title": "RCE affecting Windows hosts via UNC paths to translation files",
+                "cve": "CVE-2021-34551",
+                "link": "https://github.com/PHPMailer/PHPMailer/releases/tag/v6.5.0",
+                "reportedAt": "2021-06-16T16:20:00+00:00",
+                "sources": [
+                    {
+                        "name": "GitHub",
+                        "remoteId": "GHSA-7q44-r25x-wm4q"
+                    },
+                    {
+                        "name": "FriendsOfPHP/security-advisories",
+                        "remoteId": "phpmailer/phpmailer/CVE-2021-34551.yaml"
+                    }
+                ],
+                "severity": "high"
+            },
+            {
+                "advisoryId": "PKSA-m8by-bb7v-7qt5",
+                "packageName": "phpmailer/phpmailer",
+                "affectedVersions": "<6.5.0",
+                "title": "Untrusted code may be run from an overridden address validator",
+                "cve": "CVE-2021-3603",
+                "link": "https://github.com/PHPMailer/PHPMailer/releases/tag/v6.5.0",
+                "reportedAt": "2021-06-16T16:20:00+00:00",
+                "sources": [
+                    {
+                        "name": "GitHub",
+                        "remoteId": "GHSA-77mr-wc79-m8j3"
+                    },
+                    {
+                        "name": "FriendsOfPHP/security-advisories",
+                        "remoteId": "phpmailer/phpmailer/CVE-2021-3603.yaml"
+                    }
+                ],
+                "severity": "high"
+            },
+            {
+                "advisoryId": "PKSA-8sw7-9x88-c8bx",
+                "packageName": "phpmailer/phpmailer",
+                "affectedVersions": "<6.1.6",
+                "title": "Insufficient output escaping of attachment names in PHPMailer",
+                "cve": "CVE-2020-13625",
+                "link": "https://github.com/advisories/GHSA-f7hx-fqxw-rvvj",
+                "reportedAt": "2020-05-27T16:37:02+00:00",
+                "sources": [
+                    {
+                        "name": "GitHub",
+                        "remoteId": "GHSA-f7hx-fqxw-rvvj"
+                    }
+                ],
+                "severity": "high"
+            },
+            {
+                "advisoryId": "PKSA-dn5d-4vy3-wsfy",
+                "packageName": "phpmailer/phpmailer",
+                "affectedVersions": ">=5.0.0,<5.2.27|>=6.0.0,<6.0.6",
+                "title": "Object injection",
+                "cve": "CVE-2018-19296",
+                "link": "https://github.com/PHPMailer/PHPMailer/releases/tag/v6.0.6",
+                "reportedAt": "2017-07-26T00:41:32+00:00",
+                "sources": [
+                    {
+                        "name": "GitHub",
+                        "remoteId": "GHSA-7w4p-72j7-v7c2"
+                    },
+                    {
+                        "name": "FriendsOfPHP/security-advisories",
+                        "remoteId": "phpmailer/phpmailer/CVE-2018-19296.yaml"
+                    }
+                ],
+                "severity": "high"
+            }
+        ],
+        "symfony/http-kernel": [
+            {
+                "advisoryId": "PKSA-hr4y-jwk2-1yb9",
+                "packageName": "symfony/http-kernel",
+                "affectedVersions": ">=2.0.0,<2.1.0|>=2.1.0,<2.2.0|>=2.2.0,<2.3.0|>=2.3.0,<2.4.0|>=2.4.0,<2.5.0|>=2.5.0,<2.6.0|>=2.6.0,<2.7.0|>=2.7.0,<2.8.0|>=2.8.0,<3.0.0|>=3.0.0,<3.1.0|>=3.1.0,<3.2.0|>=3.2.0,<3.3.0|>=3.3.0,<3.4.0|>=3.4.0,<4.0.0|>=4.0.0,<4.1.0|>=4.1.0,<4.2.0|>=4.2.0,<4.3.0|>=4.3.0,<4.4.0|>=4.4.0,<4.4.50|>=5.0.0,<5.1.0|>=5.1.0,<5.2.0|>=5.2.0,<5.3.0|>=5.3.0,<5.4.0|>=5.4.0,<5.4.20|>=6.0.0,<6.0.20|>=6.1.0,<6.1.12|>=6.2.0,<6.2.6",
+                "title": "CVE-2022-24894: Prevent storing cookie headers in HttpCache",
+                "cve": "CVE-2022-24894",
+                "link": "https://symfony.com/cve-2022-24894",
+                "reportedAt": "2023-02-01T08:00:00+00:00",
+                "sources": [
+                    {
+                        "name": "GitHub",
+                        "remoteId": "GHSA-h7vf-5wrv-9fhv"
+                    },
+                    {
+                        "name": "FriendsOfPHP/security-advisories",
+                        "remoteId": "symfony/http-kernel/CVE-2022-24894.yaml"
+                    }
+                ],
+                "severity": "medium"
+            },
+            {
+                "advisoryId": "PKSA-8knv-7jsn-12w8",
+                "packageName": "symfony/http-kernel",
+                "affectedVersions": ">=4.3.0,<4.4.0|>=4.4.0,<4.4.13|>=5.0.0,<5.1.0|>=5.1.0,<5.1.5",
+                "title": "CVE-2020-15094: Prevent RCE when calling untrusted remote with CachingHttpClient",
+                "cve": "CVE-2020-15094",
+                "link": "https://symfony.com/cve-2020-15094",
+                "reportedAt": "2020-09-02T08:00:00+00:00",
+                "sources": [
+                    {
+                        "name": "GitHub",
+                        "remoteId": "GHSA-754h-5r27-7x3r"
+                    },
+                    {
+                        "name": "FriendsOfPHP/security-advisories",
+                        "remoteId": "symfony/http-kernel/CVE-2020-15094.yaml"
+                    }
+                ],
+                "severity": "high"
+            }
+        ]
+    },
+    "abandoned": {
+        "symfony/debug": "symfony/error-handler"
+    },
+    "filter": []
+}

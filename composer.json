@@ -1,0 +1,36 @@
+{
+    "name": "pieceofcake2/security-sca",
+    "description": "Software composition analysis of an application: the known vulnerabilities of its Composer packages (composer audit), as a PDF report by CVE and risk",
+    "type": "library",
+    "keywords": ["security", "sca", "composer", "audit", "cve", "vulnerability", "report", "pdf"],
+    "license": "MIT",
+    "homepage": "https://pieceofcake2.github.io/security-sca/",
+    "require": {
+        "php": ">=8.0",
+        "pieceofcake2/report": "^1.0"
+    },
+    "require-dev": {
+        "cakephp/cakephp-codesniffer": "^5.0",
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^9.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "PieceOfCake2\\SecuritySca\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PieceOfCake2\\SecuritySca\\Test\\": "tests/TestCase/"
+        }
+    },
+    "bin": [
+        "bin/security-sca"
+    ],
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    }
+}

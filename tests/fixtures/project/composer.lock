@@ -1,0 +1,26 @@
+{
+    "packages": [
+        {
+            "name": "phpmailer/phpmailer",
+            "version": "v6.0.0"
+        },
+        {
+            "name": "pieceofcake2/cakephp",
+            "version": "v2.12.2"
+        },
+        {
+            "name": "symfony/debug",
+            "version": "v4.4.44"
+        },
+        {
+            "name": "symfony/http-kernel",
+            "version": "v4.4.0"
+        }
+    ],
+    "packages-dev": [
+        {
+            "name": "phpunit/phpunit",
+            "version": "9.6.0"
+        }
+    ]
+}

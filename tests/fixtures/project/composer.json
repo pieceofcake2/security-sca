@@ -1,0 +1,6 @@
+{
+    "name": "acme/app",
+    "require": {
+        "phpmailer/phpmailer": "6.0.0"
+    }
+}
