@@ -5,6 +5,7 @@ checked with `composer audit`, as an A4 PDF report by CVE and risk, in the desig
 [pieceofcake2/report](https://pieceofcake2.github.io/report/). The exit code fails CI when a vulnerability
 reaches a risk.
 
+- [Fixing a Vulnerability](fixing.md): reading an advisory, updating the package, and staying up to date
 - [CI with GitHub Actions](ci.md)
 
 It is one of the security checks of pieceofcake2, with
@@ -127,47 +128,14 @@ CI, to see the advisories published since.
 
 A package that its author has marked as abandoned on Packagist is listed after the vulnerabilities, with the
 package to use instead when the author gave one. It gets no fixes, also for vulnerabilities found later. The
-abandoned packages do not fail the run.
+abandoned packages do not fail the run; see [Abandoned Packages](fixing.md#abandoned-packages) for their
+replacement.
 
 ## Fixing a Vulnerability
 
-Most vulnerabilities are fixed by updating the package to a version that is not affected. The page of the
-vulnerability in the report gives the installed version, the affected versions and the advisory, which tells
-the fixed versions.
-
-1. **Update the package** within the constraints of `composer.json`:
-
-   ```bash
-   composer update vendor/package --with-dependencies
-   ```
-
-2. **When the constraint does not allow the fixed version**, raise it, after reading the changes of the
-   package (its CHANGELOG or release notes):
-
-   ```bash
-   composer require vendor/package:^2.4
-   ```
-
-3. **When the package is not required by the application**, but by another package, find which one, and what
-   keeps the fixed version out:
-
-   ```bash
-   composer why vendor/package             # the packages that require it
-   composer why-not vendor/package 2.4.1   # what prevents this version
-   ```
-
-   Update the package that requires it, or require the fixed version of the package in `composer.json` when
-   the other package allows it.
-
-4. **When no version is fixed**, read the advisory: it may tell how to avoid the vulnerability, e.g. a setting
-   or a feature not to use. Replace the package if it is abandoned, or, when the vulnerability does not apply
-   to the application, ignore it with the reason (see [Ignoring an Advisory](#ignoring-an-advisory)).
-
-Then commit `composer.lock`, deploy, and run the check again. For a vulnerability of `pieceofcake2/cakephp`, update
-to the latest release of `2.12`, which keeps the API of the application.
-
-The development packages (`require-dev`) are not deployed, but run on the machines of the developers and in
-CI: fix them too. `--no-dev` leaves them out of a report, e.g. for the report of a release.
+Most vulnerabilities are fixed by updating the package: `composer update vendor/package --with-dependencies`.
+See [Fixing a Vulnerability](fixing.md) for reading an advisory, the packages that another package requires,
+CakePHP, the abandoned and the development packages, and staying up to date.
 
 ## Ignoring an Advisory
 
