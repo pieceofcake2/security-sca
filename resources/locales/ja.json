@@ -27,5 +27,20 @@
     "abandoned.description": "このパッケージはメンテナンスされていないため、脆弱性が見つかっても修正されません。",
     "abandoned.none": "代わりのパッケージは示されていません。",
     "note.none": "検査したパッケージに、既知の脆弱性は見つかりませんでした。",
-    "note.source": "脆弱性は、実行した時点の Packagist のセキュリティアドバイザリ（GitHub Advisory Database と FriendsOfPHP のセキュリティアドバイザリ）によるものです。"
+    "note.source": "脆弱性は、実行した時点の Packagist のセキュリティアドバイザリ（GitHub Advisory Database と FriendsOfPHP のセキュリティアドバイザリ）によるものです。",
+    "group.packages": "検査したパッケージ",
+    "packages.title": "composer.lock のパッケージ",
+    "badge.list": "一覧",
+    "packages.direct": "直接の依存",
+    "packages.dev": "開発用",
+    "packages.description": "検査したパッケージと、composer.lock のバージョンです。プロジェクトの composer.json が要求するものが直接、それらが要求するものが間接です。",
+    "field.kind": "種類",
+    "field.license": "ライセンス",
+    "field.state": "状態",
+    "kind.prod": "本番",
+    "kind.dev": "開発",
+    "kind.direct": "直接",
+    "kind.indirect": "間接",
+    "state.vulnerabilities": "脆弱性 {count} 件",
+    "packages.count": "パッケージ数"
 }

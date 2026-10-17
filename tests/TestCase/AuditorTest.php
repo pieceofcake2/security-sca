@@ -52,6 +52,21 @@ class AuditorTest extends TestCase
         $this->assertMatchesRegularExpression('/\A\d{4}-\d\d-\d\d\z/', (string)$first->reportedAt);
     }
 
+    public function testPackages(): void
+    {
+        $result = self::auditor()->audit(self::PROJECT);
+
+        $packages = array_map(static fn($package): string => sprintf('%s %s %s %s %s', $package->name, $package->version, $package->dev ? 'dev' : 'prod', $package->direct ? 'direct' : 'indirect', implode(',', $package->licenses)), $result->packageList);
+        $this->assertSame([
+            'phpmailer/phpmailer v6.0.0 prod direct LGPL-2.1-only',
+            'phpunit/phpunit 9.6.0 dev indirect BSD-3-Clause',
+            'pieceofcake2/cakephp v2.12.2 prod indirect MIT',
+            'symfony/debug v4.4.44 prod indirect MIT',
+            'symfony/http-kernel v4.4.0 prod indirect MIT',
+        ], $packages);
+        $this->assertCount(4, self::auditor()->audit(self::PROJECT, true)->packageList);
+    }
+
     public function testNoDev(): void
     {
         $commands = [];

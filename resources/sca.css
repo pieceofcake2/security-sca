@@ -10,3 +10,11 @@
 .list td.num { text-align: left; font-family: "SF Mono", Menlo, "DejaVu Sans Mono", monospace; font-size: 8pt; }
 .meta th { width: 34mm; }
 .kv th { width: 36mm; }
+/* The list of the audited packages */
+.badge.inventory { background: var(--sub); }
+.packages { font-size: 8pt; }
+.packages col.name { width: auto; } .packages col.version { width: 26mm; } .packages col.kind { width: 26mm; }
+.packages col.license { width: 30mm; } .packages col.state { width: 28mm; }
+.packages thead { display: table-header-group; }
+.packages tr { break-inside: avoid; }
+.packages td.mono { font-family: "SF Mono", Menlo, "DejaVu Sans Mono", monospace; font-size: 7.5pt; overflow-wrap: anywhere; }

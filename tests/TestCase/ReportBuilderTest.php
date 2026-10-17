@@ -31,6 +31,16 @@ class ReportBuilderTest extends TestCase
         return (new HtmlRenderer())->render($doc);
     }
 
+    public function testPackages(): void
+    {
+        $html = self::html(new Config(project: AuditorTest::PROJECT));
+
+        $this->assertStringContainsString('Packages of composer.lock', $html);
+        $this->assertMatchesRegularExpression('#<tr><td class="mono">phpmailer/phpmailer</td><td class="mono">v6.0.0</td><td>Production・direct</td><td>LGPL-2.1-only</td><td><span class="t-high">\d+ vulnerabilities</span></td></tr>#', $html);
+        $this->assertStringContainsString('<tr><td class="mono">symfony/debug</td><td class="mono">v4.4.44</td><td>Production・indirect</td><td>MIT</td><td>Abandoned</td></tr>', $html);
+        $this->assertStringContainsString('<tr><td class="mono">phpunit/phpunit</td><td class="mono">9.6.0</td><td>Development・indirect</td><td>BSD-3-Clause</td><td>-</td></tr>', $html);
+    }
+
     public function testReport(): void
     {
         $html = self::html(new Config(project: AuditorTest::PROJECT));

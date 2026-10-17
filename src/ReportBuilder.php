@@ -161,7 +161,60 @@ final class ReportBuilder
             $groups[] = $group;
         }
 
+        if ($result->packageList !== []) {
+            $group = new Group(count($groups) + 1, $this->t('group.packages'));
+            $group->items[] = new Item(
+                $group->no . '-1',
+                $this->t('packages.title'),
+                // Not "list", the class of the list page, which breaks the page after it
+                'inventory',
+                $this->t('badge.list'),
+                (string)count($result->packageList),
+                [
+                    new Row($this->t('packages.count'), (string)count($result->packageList)),
+                    new Row($this->t('packages.direct'), (string)count(array_filter($result->packageList, static fn(Package $package): bool => $package->direct))),
+                    new Row($this->t('packages.dev'), (string)count(array_filter($result->packageList, static fn(Package $package): bool => $package->dev))),
+                ],
+                $this->t('packages.description'),
+                body: $this->packages($result),
+            );
+            $groups[] = $group;
+        }
+
         return $groups;
+    }
+
+    /**
+     * The table of the audited packages, with their vulnerabilities
+     *
+     * @param \PieceOfCake2\SecuritySca\AuditResult $result Audit
+     * @return string HTML
+     */
+    private function packages(AuditResult $result): string
+    {
+        $h = static fn(string $text): string => htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $vulnerabilities = [];
+        foreach ($result->advisories as $advisory) {
+            $vulnerabilities[$advisory->package] = ($vulnerabilities[$advisory->package] ?? 0) + 1;
+        }
+
+        $html = '<table class="packages"><colgroup><col class="name"><col class="version"><col class="kind"><col class="license"><col class="state"></colgroup>'
+            . '<thead><tr><th>' . $h($this->t('field.package')) . '</th><th>' . $h($this->t('field.installed')) . '</th><th>'
+            . $h($this->t('field.kind')) . '</th><th>' . $h($this->t('field.license')) . '</th><th>' . $h($this->t('field.state')) . '</th></tr></thead><tbody>';
+        foreach ($result->packageList as $package) {
+            $kind = $this->t($package->dev ? 'kind.dev' : 'kind.prod') . '・' . $this->t($package->direct ? 'kind.direct' : 'kind.indirect');
+            $state = [];
+            if (isset($vulnerabilities[$package->name])) {
+                $state[] = '<span class="t-high">' . $h($this->t('state.vulnerabilities', ['count' => $vulnerabilities[$package->name]])) . '</span>';
+            }
+            if (array_key_exists($package->name, $result->abandoned)) {
+                $state[] = $h($this->t('badge.abandoned'));
+            }
+            $html .= '<tr><td class="mono">' . $h($package->name) . '</td><td class="mono">' . $h($package->version) . '</td><td>' . $h($kind) . '</td><td>'
+                . $h($package->licenses !== [] ? implode(', ', $package->licenses) : '-') . '</td><td>' . ($state !== [] ? implode('、', $state) : '-') . '</td></tr>';
+        }
+
+        return $html . '</tbody></table>';
     }
 
     /**
