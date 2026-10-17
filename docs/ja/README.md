@@ -4,8 +4,11 @@
 CVE とリスクごとの A4 の PDF の報告書にします。報告書は [pieceofcake2/report](https://pieceofcake2.github.io/report/ja/)
 のデザインです。あるリスク以上の脆弱性があれば、終了コードで CI を失敗にします。
 
-pieceofcake2 のセキュリティ診断の 1 つで、ほかに pieceofcake2/security-sast (ソースコード) と pieceofcake2/security-dast
-(動いているアプリケーション) があります。pieceofcake2/security-check で、すべてを実行できます。
+- [GitHub Actions での CI](ci.md)
+
+pieceofcake2 のセキュリティ診断の 1 つで、ほかに [pieceofcake2/security-sast](https://pieceofcake2.github.io/security-sast/ja/)
+(ソースコード) と pieceofcake2/security-dast (動いているアプリケーション) があります。pieceofcake2/security-check で、
+すべてを実行できます。
 
 ## 必要なもの
 
@@ -52,18 +55,52 @@ vendor/bin/security-sca --pdf=tmp/security-sca.pdf --language=ja
 脆弱性は、実行した時点の Packagist のセキュリティアドバイザリによるものです。GitHub Advisory Database (審査済みの
 アドバイザリ) と FriendsOfPHP のセキュリティアドバイザリが元になっています。
 
-## GitHub Actions
+## 脆弱性の情報源
 
-[docs/examples/security-sca.yml](../examples/security-sca.yml) は、push と pull request のたびと、その後に公開された
-アドバイザリのために毎週、パッケージを調べ、報告書をアップロードします。
+`composer audit` は、`composer.lock` のパッケージを Packagist のセキュリティアドバイザリで調べます。その元は次のとおりです。
 
-```yaml
-- run: composer install --no-interaction --no-progress
-- run: sudo apt-get install -y fonts-noto-cjk
-- run: vendor/bin/security-sca --pdf=tmp/security-sca.pdf --fail-on=high --language=ja
-- uses: actions/upload-artifact@v7
-  if: ${{ !cancelled() }}
-  with:
-    path: tmp/security-sca.pdf
-    archive: false
+- [GitHub Advisory Database](https://github.com/advisories?query=ecosystem%3Acomposer): GitHub が審査したアドバイザリ。
+  プロジェクトが自分のリポジトリで公開したアドバイザリは、GitHub の審査の後に出てきます。審査には数日かかることがあります
+- [FriendsOfPHP のセキュリティアドバイザリ](https://github.com/FriendsOfPHP/security-advisories)
+
+リスクはアドバイザリのもの (`critical`、`high`、`medium`、`low`) で、ないものは `unknown` です。報告書は実行した時点の
+アドバイザリによるものです。その後に公開されたアドバイザリを見るには、CI で毎週など、繰り返し実行してください。
+
+## 開発が終了したパッケージ
+
+作者が Packagist で開発の終了 (abandoned) を示したパッケージを、脆弱性の後に並べます。作者が示していれば、代わりの
+パッケージも載せます。後で見つかる脆弱性も含めて、修正は出ません。開発が終了したパッケージで不合格にはなりません。
+
+## アドバイザリを除外する
+
+Windows だけの脆弱性や、アプリケーションが使わない機能の脆弱性など、アプリケーションに当てはまらないアドバイザリは、
+`composer.json` で理由と一緒に除外します (Composer 2.6 以上)。`composer audit` と報告書から除かれます。
+
+```json
+{
+    "config": {
+        "audit": {
+            "ignore": {
+                "CVE-2021-34551": "Windows だけの脆弱性。アプリケーションは Linux で動く"
+            }
+        }
+    }
+}
 ```
+
+キーには、CVE ID、アドバイザリの ID (`PKSA-...`)、またはアドバイザリの情報源の ID (GHSA ID など) を書きます。除外したアドバイザリは忘れられがちなので、
+できるだけパッケージを更新してください。
+
+## トラブルシューティング
+
+**`composer.lock is not found`**: 先にプロジェクトで `composer install` (または `composer update`) を実行するか、
+`--project` でプロジェクトを指定してください。
+
+**`composer audit failed`**: 続けて Composer のメッセージが出ます。`packagist.org` へのネットワークが許可されていない、
+`composer.lock` が正しくない、などです。`composer audit` はアドバイザリをダウンロードする必要があります。
+
+**公開されたばかりのアドバイザリの脆弱性が出ない**: GitHub Advisory Database にまだ載っていません
+([脆弱性の情報源](#脆弱性の情報源))。
+
+**`Chrome is needed to print the report`**: Chrome か Chromium をインストールするか、`REPORT_CHROME_BINARY` を設定して
+ください ([pieceofcake2/report](https://pieceofcake2.github.io/report/ja/))。
