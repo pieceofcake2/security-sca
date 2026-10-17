@@ -5,7 +5,10 @@ checked with `composer audit`, as an A4 PDF report by CVE and risk, in the desig
 [pieceofcake2/report](https://pieceofcake2.github.io/report/). The exit code fails CI when a vulnerability
 reaches a risk.
 
-It is one of the security checks of pieceofcake2, with pieceofcake2/security-sast (the source code) and
+- [CI with GitHub Actions](ci.md)
+
+It is one of the security checks of pieceofcake2, with
+[pieceofcake2/security-sast](https://pieceofcake2.github.io/security-sast/) (the source code) and
 pieceofcake2/security-dast (the running application); pieceofcake2/security-check runs them all.
 
 ## Requirements
@@ -55,18 +58,57 @@ the report fails. A vulnerability whose risk is not known fails only with `--fai
 The vulnerabilities are those of the security advisories of Packagist at the time of the run: the GitHub
 Advisory Database (reviewed advisories) and the FriendsOfPHP security advisories.
 
-## GitHub Actions
+## Where the Vulnerabilities Come From
 
-[docs/examples/security-sca.yml](examples/security-sca.yml) audits the packages on each push and pull
-request, and every week for the advisories published since, and uploads the report:
+`composer audit` looks the packages of `composer.lock` up in the security advisories of Packagist, which come
+from:
 
-```yaml
-- run: composer install --no-interaction --no-progress
-- run: sudo apt-get install -y fonts-noto-cjk
-- run: vendor/bin/security-sca --pdf=tmp/security-sca.pdf --fail-on=high --language=ja
-- uses: actions/upload-artifact@v7
-  if: ${{ !cancelled() }}
-  with:
-    path: tmp/security-sca.pdf
-    archive: false
+- the [GitHub Advisory Database](https://github.com/advisories?query=ecosystem%3Acomposer): the advisories that
+  GitHub has reviewed. An advisory that a project has published on its repository appears after GitHub reviews
+  it, which can take days
+- the [FriendsOfPHP security advisories](https://github.com/FriendsOfPHP/security-advisories)
+
+The risk is the one of the advisory (`critical`, `high`, `medium`, `low`); an advisory without one is
+`unknown`. The report is the state of the advisories at the time of the run: run it again, e.g. every week in
+CI, to see the advisories published since.
+
+## Abandoned Packages
+
+A package that its author has marked as abandoned on Packagist is listed after the vulnerabilities, with the
+package to use instead when the author gave one. It gets no fixes, also for vulnerabilities found later. The
+abandoned packages do not fail the run.
+
+## Ignoring an Advisory
+
+When an advisory does not apply to the application, e.g. a vulnerability of Windows only, or of a feature that
+the application does not use, ignore it in `composer.json` with the reason (Composer 2.6+). It is then left out
+of `composer audit` and of the report:
+
+```json
+{
+    "config": {
+        "audit": {
+            "ignore": {
+                "CVE-2021-34551": "Windows only: the application runs on Linux"
+            }
+        }
+    }
+}
 ```
+
+The key is the CVE ID, the advisory ID (`PKSA-...`) or the ID of a source of the advisory, e.g. its GHSA ID. Update the package instead when you can:
+an ignored advisory is easily forgotten.
+
+## Troubleshooting
+
+**`composer.lock is not found`**: run `composer install` (or `composer update`) in the project first, or give the
+project with `--project`.
+
+**`composer audit failed`**: the message of Composer follows, e.g. the network to `packagist.org` is not allowed,
+or `composer.lock` is not valid. `composer audit` needs to download the advisories.
+
+**The vulnerabilities of an advisory that was just published are missing**: it is not in the GitHub Advisory
+Database yet (see [Where the Vulnerabilities Come From](#where-the-vulnerabilities-come-from)).
+
+**`Chrome is needed to print the report`**: install Chrome or Chromium, or set `REPORT_CHROME_BINARY` (see
+[pieceofcake2/report](https://pieceofcake2.github.io/report/)).
