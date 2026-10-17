@@ -4,7 +4,8 @@ declare(strict_types=1);
 namespace PieceOfCake2\SecuritySca;
 
 /**
- * The settings of a run: the options of `security-sca`, or the environment variables of the same names.
+ * The settings of a run: the options of `security-sca`, the environment variables of the same names, or the
+ * settings file (`Settings`).
  *
  * | Option | Variable | Default | |
  * |---|---|---|---|
@@ -18,6 +19,7 @@ namespace PieceOfCake2\SecuritySca;
  * | `--title` | `SECURITY_SCA_TITLE` | the title of the language | Title of the report |
  * | `--project-name` | `SECURITY_REPORT_PROJECT` | the name of the Composer root package | Name of the project under the title |
  * | `--note` | `SECURITY_SCA_NOTE` | | A note on the cover |
+ * | `--settings` | `SECURITY_SETTINGS` | `config/security.php` or `app/Config/security.php` | Settings file |
  */
 final class Config
 {

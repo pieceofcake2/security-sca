@@ -7,8 +7,20 @@ CVE とリスクごとの A4 の PDF の報告書にします。報告書は [pi
 - [GitHub Actions での CI](ci.md)
 
 pieceofcake2 のセキュリティ診断の 1 つで、ほかに [pieceofcake2/security-sast](https://pieceofcake2.github.io/security-sast/ja/)
-(ソースコード) と pieceofcake2/security-dast (動いているアプリケーション) があります。pieceofcake2/security-check で、
-すべてを実行できます。
+(ソースコード) と [pieceofcake2/security-dast](https://pieceofcake2.github.io/security-dast/ja/) (動いているアプリケーション)
+があります。pieceofcake2/security-check で、すべてを実行できます。
+
+## チェックすること
+
+`composer.lock` のすべてのパッケージ (アプリケーションが必要とするパッケージと、それらが必要とするパッケージ) を、
+インストールされているバージョンで調べます。
+
+- **既知の脆弱性**: そのバージョンのパッケージに公開されたセキュリティアドバイザリ。あるバージョンのライブラリの
+  SQL インジェクションなどで、CVE とリスクも示します ([脆弱性の情報源](#脆弱性の情報源))
+- **開発が終了したパッケージ**: 作者がもうメンテナンスしていないパッケージ ([開発が終了したパッケージ](#開発が終了したパッケージ))
+
+アプリケーションのコードはここでは調べません。コードは [pieceofcake2/security-sast](https://pieceofcake2.github.io/security-sast/ja/)
+で、動いているアプリケーションは [pieceofcake2/security-dast](https://pieceofcake2.github.io/security-dast/ja/) で調べます。
 
 ## 必要なもの
 
@@ -40,11 +52,41 @@ vendor/bin/security-sca --pdf=tmp/security-sca.pdf --language=ja
 | `--title=TITLE` | `SECURITY_SCA_TITLE` | 言語のタイトル | 報告書のタイトル |
 | `--project-name=NAME` | `SECURITY_REPORT_PROJECT` | `composer.json` の名前 | タイトルの下のプロジェクト名 |
 | `--note=TEXT` | `SECURITY_SCA_NOTE` | | 表紙の注記 |
+| `--settings=FILE` | `SECURITY_SETTINGS` | `config/security.php` か `app/Config/security.php` | 設定ファイル |
 
 終了コードは、`--fail-on` に達する脆弱性がなければ `0`、あれば `1`、調査や報告書の作成に失敗したときは `2` です。リスクが
 不明な脆弱性は、`--fail-on=low` のときだけ不合格になります。
 
+### 設定ファイル
+
+pieceofcake2 のセキュリティ診断の設定は、プロジェクトの `config/security.php` (従来の構成では `app/Config/security.php`)
+にまとめられます。診断ごとのセクションと、共通の `report` セクションを持つ配列を返します。
+
+```php
+<?php
+return [
+    'report' => [
+        'language' => 'ja',
+        'dir' => 'tmp/security',
+    ],
+    'sca' => [
+        'failOn' => 'medium',
+        'noDev' => true,
+    ],
+];
+```
+
+`sca` セクションのキーは、オプションをキャメルケースにしたものです (`--fail-on` は `failOn`)。`report` セクションには
+`language`、`localeDir`、`project` (プロジェクト名)、`note` と、報告書のディレクトリ `dir` があります (この例では
+`tmp/security/security-sca.pdf` に書き出します)。`sca` セクションに知らないキーがあるとエラーになります。オプションが
+環境変数より、環境変数が設定ファイルより優先されます。
+
 ## 報告書
+
+- [見本の報告書 (日本語、PDF)](/report-sample-ja.pdf)
+- [見本の報告書 (英語、PDF)](/report-sample.pdf)
+
+![表紙、リスク別の脆弱性、脆弱性のページ](../img/report-sample-ja.png)
 
 1. **表紙**: 結果、リスクごとの脆弱性の数、リポジトリ、ブランチ、コミット、検査したパッケージの数、不合格の基準、実行の
    日時、環境、ソフトウェア
@@ -70,6 +112,45 @@ vendor/bin/security-sca --pdf=tmp/security-sca.pdf --language=ja
 
 作者が Packagist で開発の終了 (abandoned) を示したパッケージを、脆弱性の後に並べます。作者が示していれば、代わりの
 パッケージも載せます。後で見つかる脆弱性も含めて、修正は出ません。開発が終了したパッケージで不合格にはなりません。
+
+## 脆弱性を直す
+
+ほとんどの脆弱性は、パッケージを影響のないバージョンに更新すれば直ります。報告書の脆弱性のページに、導入バージョン、
+影響するバージョン、アドバイザリがあります。修正されたバージョンはアドバイザリに書いてあります。
+
+1. **パッケージを更新します**。`composer.json` の制約の範囲で更新します。
+
+   ```bash
+   composer update vendor/package --with-dependencies
+   ```
+
+2. **制約が修正されたバージョンを許さないとき**は、パッケージの変更 (CHANGELOG やリリースノート) を読んでから、制約を
+   上げます。
+
+   ```bash
+   composer require vendor/package:^2.4
+   ```
+
+3. **アプリケーションではなく、ほかのパッケージがそのパッケージを必要としているとき**は、どのパッケージか、何が修正
+   されたバージョンを妨げているかを調べます。
+
+   ```bash
+   composer why vendor/package             # それを必要とするパッケージ
+   composer why-not vendor/package 2.4.1   # このバージョンを妨げているもの
+   ```
+
+   それを必要とするパッケージを更新するか、そのパッケージが許すなら、修正されたバージョンを `composer.json` で
+   直接要求します。
+
+4. **修正されたバージョンがないとき**は、アドバイザリを読んでください。設定や使わない機能など、脆弱性を避ける方法が
+   書いてあることがあります。開発が終了したパッケージなら置き換えます。アプリケーションに当てはまらない脆弱性なら、
+   理由を書いて除外します ([アドバイザリを除外する](#アドバイザリを除外する))。
+
+そのあと `composer.lock` をコミットしてデプロイし、もう一度チェックします。`pieceofcake2/cakephp` の脆弱性は、`2.12`
+の最新のリリースに更新してください。アプリケーションの API は変わりません。
+
+開発用のパッケージ (`require-dev`) はデプロイされませんが、開発者のマシンや CI で動きます。これも直してください。
+`--no-dev` は、リリースの報告書などで開発用のパッケージを除きます。
 
 ## アドバイザリを除外する
 

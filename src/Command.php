@@ -97,7 +97,7 @@ final class Command
     }
 
     /**
-     * The settings of the arguments and the environment variables, or null for `--help`
+     * The settings of the arguments, the environment variables and the settings file, or null for `--help`
      *
      * @param array<string> $argv Arguments
      * @param array<string, mixed> $env Environment variables
@@ -114,7 +114,7 @@ final class Command
         $options = [
             'pdf' => $value('SECURITY_SCA_PDF'),
             'fail-on' => $value('SECURITY_SCA_FAIL_ON'),
-            'no-dev' => filter_var($value('SECURITY_SCA_NO_DEV') ?? false, FILTER_VALIDATE_BOOLEAN),
+            'no-dev' => $value('SECURITY_SCA_NO_DEV'),
             'project' => null,
             'composer' => $value('SECURITY_SCA_COMPOSER'),
             'language' => $value('SECURITY_REPORT_LANGUAGE'),
@@ -123,19 +123,31 @@ final class Command
             'project-name' => $value('SECURITY_REPORT_PROJECT'),
             'note' => $value('SECURITY_SCA_NOTE'),
         ];
+        $arguments = [];
         foreach ($argv as $arg) {
             if ($arg === '--help' || $arg === '-h') {
                 return null;
             }
             if ($arg === '--no-dev') {
-                $options['no-dev'] = true;
+                $arguments['no-dev'] = '1';
                 continue;
             }
-            if (!preg_match('/\A--([a-z-]+)=(.*)\z/s', $arg, $matches) || !array_key_exists($matches[1], $options) || $matches[1] === 'no-dev') {
+            if (!preg_match('/\A--([a-z-]+)=(.*)\z/s', $arg, $matches) || (!array_key_exists($matches[1], $options) && $matches[1] !== 'settings') || $matches[1] === 'no-dev') {
                 throw new InvalidArgumentException(sprintf('Unknown option: %s', $arg));
             }
-            $options[$matches[1]] = $matches[2];
+            $arguments[$matches[1]] = $matches[2];
         }
+
+        // The options of the command, then the environment variables, then the settings file
+        $file = Settings::options((string)($arguments['project'] ?? '.'), 'sca', $arguments['settings'] ?? $value('SECURITY_SETTINGS'), 'security-sca.pdf');
+        foreach ($file as $name => $setting) {
+            if (!array_key_exists($name, $options) || $name === 'project') {
+                throw new InvalidArgumentException(sprintf('Unknown setting of the sca section: %s', $name));
+            }
+            $options[$name] ??= is_bool($setting) ? ($setting ? '1' : '0') : $setting;
+        }
+        unset($arguments['settings']);
+        $options = array_merge($options, $arguments);
 
         $failOn = strtolower((string)($options['fail-on'] ?? Severity::HIGH));
         if (!in_array($failOn, Config::THRESHOLDS, true)) {
@@ -145,7 +157,7 @@ final class Command
         return new Config(
             (string)($options['pdf'] ?? 'tmp/security-sca.pdf'),
             $failOn,
-            (bool)$options['no-dev'],
+            filter_var($options['no-dev'] ?? false, FILTER_VALIDATE_BOOLEAN),
             (string)($options['project'] ?? '.'),
             (string)($options['composer'] ?? 'composer'),
             (string)($options['language'] ?? 'en'),
@@ -181,6 +193,7 @@ Options:
   --title=TITLE        Title of the report (SECURITY_SCA_TITLE)
   --project-name=NAME  Name of the project (SECURITY_REPORT_PROJECT, default: the root package)
   --note=TEXT          Note on the cover (SECURITY_SCA_NOTE)
+  --settings=FILE      Settings file (SECURITY_SETTINGS, default: config/security.php or app/Config/security.php)
   --help               Show this help
 
 Exit code: 0 passed, 1 a vulnerability reaches --fail-on, 2 error.
