@@ -15,12 +15,14 @@ final class AuditResult
      * @param array<string, string|null> $abandoned Abandoned packages and the package to use instead, if any
      * @param int $packages Number of the audited packages
      * @param string|null $composerVersion Version of Composer, e.g. `2.8.12`
+     * @param array<\PieceOfCake2\SecuritySca\Package> $packageList The audited packages, by name
      */
     public function __construct(
         public array $advisories = [],
         public array $abandoned = [],
         public int $packages = 0,
         public ?string $composerVersion = null,
+        public array $packageList = [],
     ) {
     }
 

@@ -27,5 +27,20 @@
     "abandoned.description": "The package is no longer maintained, so its vulnerabilities will not be fixed.",
     "abandoned.none": "No replacement is suggested.",
     "note.none": "No known vulnerability was found in the audited packages.",
-    "note.source": "The vulnerabilities are those of the security advisories of Packagist (the GitHub Advisory Database and the FriendsOfPHP security advisories) at the time of the run."
+    "note.source": "The vulnerabilities are those of the security advisories of Packagist (the GitHub Advisory Database and the FriendsOfPHP security advisories) at the time of the run.",
+    "group.packages": "Audited packages",
+    "packages.title": "Packages of composer.lock",
+    "badge.list": "List",
+    "packages.direct": "Direct",
+    "packages.dev": "Development",
+    "packages.description": "The packages that were audited, in the versions of composer.lock. The packages that the project requires in its composer.json are direct; the others are required by them.",
+    "field.kind": "Kind",
+    "field.license": "License",
+    "field.state": "Status",
+    "kind.prod": "Production",
+    "kind.dev": "Development",
+    "kind.direct": "direct",
+    "kind.indirect": "indirect",
+    "state.vulnerabilities": "{count} vulnerabilities",
+    "packages.count": "Packages"
 }

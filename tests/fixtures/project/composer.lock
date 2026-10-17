@@ -2,25 +2,40 @@
     "packages": [
         {
             "name": "phpmailer/phpmailer",
-            "version": "v6.0.0"
+            "version": "v6.0.0",
+            "license": [
+                "LGPL-2.1-only"
+            ]
         },
         {
             "name": "pieceofcake2/cakephp",
-            "version": "v2.12.2"
+            "version": "v2.12.2",
+            "license": [
+                "MIT"
+            ]
         },
         {
             "name": "symfony/debug",
-            "version": "v4.4.44"
+            "version": "v4.4.44",
+            "license": [
+                "MIT"
+            ]
         },
         {
             "name": "symfony/http-kernel",
-            "version": "v4.4.0"
+            "version": "v4.4.0",
+            "license": [
+                "MIT"
+            ]
         }
     ],
     "packages-dev": [
         {
             "name": "phpunit/phpunit",
-            "version": "9.6.0"
+            "version": "9.6.0",
+            "license": [
+                "BSD-3-Clause"
+            ]
         }
     ]
 }

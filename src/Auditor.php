@@ -71,6 +71,7 @@ final class Auditor
             self::abandoned($data['abandoned'] ?? []),
             count($installed),
             $versionCode === 0 && preg_match('/(\d+\.\d+\.\d+\S*)/', $version, $matches) ? $matches[1] : null,
+            self::packages($lock, $noDev, $dir . DIRECTORY_SEPARATOR . 'composer.json'),
         );
     }
 
@@ -114,6 +115,43 @@ final class Auditor
         usort($advisories, static fn(Advisory $a, Advisory $b): int => [Severity::rank($a->severity), $a->package, $a->name()] <=> [Severity::rank($b->severity), $b->package, $b->name()]);
 
         return $advisories;
+    }
+
+    /**
+     * The packages of `composer.lock`, by name
+     *
+     * @param string $lock Path of `composer.lock`
+     * @param bool $noDev Whether to leave out the development packages
+     * @param string|null $json Path of `composer.json`, for the packages that the project requires
+     * @return array<\PieceOfCake2\SecuritySca\Package>
+     */
+    public static function packages(string $lock, bool $noDev = false, ?string $json = null): array
+    {
+        $data = json_decode((string)file_get_contents($lock), true);
+        $project = $json !== null && is_file($json) ? json_decode((string)file_get_contents($json), true) : null;
+        $required = [];
+        foreach (['require', 'require-dev'] as $key) {
+            $required += is_array($project) && is_array($project[$key] ?? null) ? $project[$key] : [];
+        }
+        $packages = [];
+        foreach ($noDev ? ['packages'] : ['packages', 'packages-dev'] as $key) {
+            foreach (is_array($data) && is_array($data[$key] ?? null) ? $data[$key] : [] as $package) {
+                if (!is_array($package) || !isset($package['name'], $package['version'])) {
+                    continue;
+                }
+                $name = (string)$package['name'];
+                $packages[$name] = new Package(
+                    $name,
+                    (string)$package['version'],
+                    $key === 'packages-dev',
+                    isset($required[$name]),
+                    array_values(array_map('strval', array_filter((array)($package['license'] ?? []), 'is_scalar'))),
+                );
+            }
+        }
+        ksort($packages);
+
+        return array_values($packages);
     }
 
     /**

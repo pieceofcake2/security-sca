@@ -101,6 +101,10 @@ options win over the environment variables, and the environment variables over t
 3. **A page for each vulnerability**: its CVE (or GHSA ID when it has no CVE) and title, risk, package,
    installed and affected versions, the IDs of the advisory, the date of the report, and the links to the
    advisory, the CVE record and the GitHub advisory
+4. **Audited packages**: every package of `composer.lock` (without the development packages with `--no-dev`),
+   with its version, whether it is a production or a development package, whether the project requires it
+   directly or another package does, its licenses, and its vulnerabilities and whether it is abandoned. It is
+   the inventory of what was checked, also when nothing was found
 
 The vulnerabilities are those of the security advisories of Packagist at the time of the run: the GitHub
 Advisory Database (reviewed advisories) and the FriendsOfPHP security advisories.
