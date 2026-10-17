@@ -9,7 +9,23 @@ reaches a risk.
 
 It is one of the security checks of pieceofcake2, with
 [pieceofcake2/security-sast](https://pieceofcake2.github.io/security-sast/) (the source code) and
-pieceofcake2/security-dast (the running application); pieceofcake2/security-check runs them all.
+[pieceofcake2/security-dast](https://pieceofcake2.github.io/security-dast/) (the running application);
+pieceofcake2/security-check runs them all.
+
+## What is Checked
+
+Every package of `composer.lock`, the packages that the application requires and the packages that they
+require, in the versions that are installed:
+
+- **Known vulnerabilities**: the security advisories published for the installed version of a package, e.g.
+  an SQL injection of a version of a library, with their CVE and risk (see
+  [Where the Vulnerabilities Come From](#where-the-vulnerabilities-come-from))
+- **Abandoned packages**: the packages that their authors no longer maintain (see
+  [Abandoned Packages](#abandoned-packages))
+
+The code of the application is not checked here: see
+[pieceofcake2/security-sast](https://pieceofcake2.github.io/security-sast/) for it, and
+[pieceofcake2/security-dast](https://pieceofcake2.github.io/security-dast/) for the running application.
 
 ## Requirements
 
@@ -41,11 +57,42 @@ vendor/bin/security-sca --pdf=tmp/security-sca.pdf --language=ja
 | `--title=TITLE` | `SECURITY_SCA_TITLE` | the title of the language | The title of the report |
 | `--project-name=NAME` | `SECURITY_REPORT_PROJECT` | the name in `composer.json` | The project under the title |
 | `--note=TEXT` | `SECURITY_SCA_NOTE` | | A note on the cover |
+| `--settings=FILE` | `SECURITY_SETTINGS` | `config/security.php` or `app/Config/security.php` | The settings file |
 
 The exit code is `0` when no vulnerability reaches `--fail-on`, `1` when one does, and `2` when the audit or
 the report fails. A vulnerability whose risk is not known fails only with `--fail-on=low`.
 
+### The Settings File
+
+The settings of the security checks of pieceofcake2 can be kept in the project, in `config/security.php`
+(`app/Config/security.php` of the legacy layout). It returns an array with a section for each check, and a
+`report` section that they share:
+
+```php
+<?php
+return [
+    'report' => [
+        'language' => 'ja',
+        'dir' => 'tmp/security',
+    ],
+    'sca' => [
+        'failOn' => 'medium',
+        'noDev' => true,
+    ],
+];
+```
+
+The keys of the `sca` section are the options in camel case (`--fail-on` is `failOn`). The `report` section
+has `language`, `localeDir`, `project` (the project name), `note` and `dir`, the directory of the reports (this
+one is written to `tmp/security/security-sca.pdf`). An unknown key of the `sca` section is an error. The
+options win over the environment variables, and the environment variables over the file.
+
 ## The Report
+
+- [Sample report (English, PDF)](/report-sample.pdf)
+- [Sample report (Japanese, PDF)](/report-sample-ja.pdf)
+
+![The cover, the vulnerabilities by risk and the page of a vulnerability](img/report-sample.png)
 
 1. **Cover**: the result, the numbers of vulnerabilities by risk, the repository, branch and commit, the
    number of audited packages, the threshold, and the date, environment and software of the run
@@ -77,6 +124,46 @@ CI, to see the advisories published since.
 A package that its author has marked as abandoned on Packagist is listed after the vulnerabilities, with the
 package to use instead when the author gave one. It gets no fixes, also for vulnerabilities found later. The
 abandoned packages do not fail the run.
+
+## Fixing a Vulnerability
+
+Most vulnerabilities are fixed by updating the package to a version that is not affected. The page of the
+vulnerability in the report gives the installed version, the affected versions and the advisory, which tells
+the fixed versions.
+
+1. **Update the package** within the constraints of `composer.json`:
+
+   ```bash
+   composer update vendor/package --with-dependencies
+   ```
+
+2. **When the constraint does not allow the fixed version**, raise it, after reading the changes of the
+   package (its CHANGELOG or release notes):
+
+   ```bash
+   composer require vendor/package:^2.4
+   ```
+
+3. **When the package is not required by the application**, but by another package, find which one, and what
+   keeps the fixed version out:
+
+   ```bash
+   composer why vendor/package             # the packages that require it
+   composer why-not vendor/package 2.4.1   # what prevents this version
+   ```
+
+   Update the package that requires it, or require the fixed version of the package in `composer.json` when
+   the other package allows it.
+
+4. **When no version is fixed**, read the advisory: it may tell how to avoid the vulnerability, e.g. a setting
+   or a feature not to use. Replace the package if it is abandoned, or, when the vulnerability does not apply
+   to the application, ignore it with the reason (see [Ignoring an Advisory](#ignoring-an-advisory)).
+
+Then commit `composer.lock`, deploy, and run the check again. For a vulnerability of `pieceofcake2/cakephp`, update
+to the latest release of `2.12`, which keeps the API of the application.
+
+The development packages (`require-dev`) are not deployed, but run on the machines of the developers and in
+CI: fix them too. `--no-dev` leaves them out of a report, e.g. for the report of a release.
 
 ## Ignoring an Advisory
 

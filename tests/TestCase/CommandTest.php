@@ -36,6 +36,39 @@ class CommandTest extends TestCase
         $this->assertSame('composer', $config->composer);
     }
 
+    public function testSettingsFile(): void
+    {
+        $project = __DIR__ . DS . '..' . DS . 'fixtures' . DS . 'settings';
+        $config = Command::config(['--project=' . $project, '--composer=composer'], ['SECURITY_SCA_FAIL_ON' => 'low']);
+
+        $this->assertNotNull($config);
+        // The option and the environment variable win over the file
+        $this->assertSame('composer', $config->composer);
+        $this->assertSame('low', $config->failOn);
+        $this->assertTrue($config->noDev);
+        $this->assertSame('ja', $config->language);
+        $this->assertSame('Acme', $config->projectName);
+        $this->assertSame('tmp/security/security-sca.pdf', $config->pdf);
+    }
+
+    public function testSettingsFileOption(): void
+    {
+        $file = TMP . 'security.php';
+        file_put_contents($file, "<?php\nreturn ['sca' => ['noDev' => false, 'verbose' => true]];\n");
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unknown setting of the sca section: verbose');
+        Command::config(['--settings=' . $file]);
+    }
+
+    public function testNoDevOfEnvironment(): void
+    {
+        $config = Command::config([], ['SECURITY_SCA_NO_DEV' => '1']);
+
+        $this->assertNotNull($config);
+        $this->assertTrue($config->noDev);
+    }
+
     public function testInvalidOptions(): void
     {
         $this->assertNull(Command::config(['--help']));
