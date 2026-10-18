@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- A large error output of Composer, e.g. many deprecation notices, no longer blocks the audit: it waited for the
+  output while Composer waited to write its errors
+- `--composer` takes words, e.g. `php composer.phar`, and its files are relative to the current directory, as the
+  other paths of the options
+- The packages of a filter list that `config.policy` of `composer.json` sets to report only (`"audit": "report"`)
+  are of an unknown risk instead of critical, as Composer does not fail on them
+- The example workflow of the docs is in the Composer package, which `docs/ci.md` links to
 - A package whose name in `composer.lock` has capitals, e.g. of a private repository, gets its installed version on
   the page of its advisories and its vulnerabilities in the list of the packages: the advisories name it in lower
   case

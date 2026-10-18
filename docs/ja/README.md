@@ -48,7 +48,7 @@ vendor/bin/security-sca --pdf=tmp/security-sca.pdf --language=ja
 | `--fail-on=RISK` | `SECURITY_SCA_FAIL_ON` | `high` | 不合格にする最も低いリスク。`critical`、`high`、`medium`、`low`、`none` |
 | `--no-dev` | `SECURITY_SCA_NO_DEV` | | 開発用のパッケージ (`require-dev`) を除きます。設定ファイルで除いているときは、`--no-dev=0` で含めます |
 | `--project=DIR` | | カレントディレクトリ | `composer.json` と `composer.lock` のディレクトリ |
-| `--composer=COMMAND` | `SECURITY_SCA_COMPOSER` | `composer` | Composer のコマンド |
+| `--composer=COMMAND` | `SECURITY_SCA_COMPOSER` | `composer` | Composer のコマンド。`./composer.phar` や `php composer.phar` など。ファイルはカレントディレクトリからの相対パス |
 | `--language=LANG` | `SECURITY_REPORT_LANGUAGE` | `en` | `en` か `ja`、または `--locale-dir` の言語 |
 | `--locale-dir=DIR` | `SECURITY_REPORT_LOCALE_DIR` | | メッセージを足したり置き換えたりする `<言語>.json` のディレクトリ |
 | `--title=TITLE` | `SECURITY_SCA_TITLE` | 言語のタイトル | 報告書のタイトル |
@@ -119,7 +119,9 @@ return [
 アドバイザリによるものです。その後に公開されたアドバイザリを見るには、CI で毎週など、繰り返し実行してください。
 
 Composer 2.10 以上では、リポジトリのフィルターリスト (マルウェアのリストなど) に当てはまるパッケージを、リストの名前と
-理由を付けて、Critical の脆弱性として報告します。Composer がリポジトリに到達できないときは、調査が失敗します
+理由を付けて、Critical の脆弱性として報告します。`composer.json` の `config.policy` で報告だけにした
+リスト (`"audit": "report"`) は、Composer が不合格にしないので、リスクが不明の脆弱性として報告し、`--fail-on=low` のときだけ
+不合格になります。Composer がリポジトリに到達できないときは、調査が失敗します
 (終了コード `2`、`composer audit failed`)。`composer.json` の `audit.ignore-unreachable` が `true` のときだけは、Composer は
 ほかのリポジトリを調べ、報告書の表紙に到達できないリポジトリを載せ、コマンドも出力します。合否は見つかった
 アドバイザリで決まり、到達できないリポジトリのアドバイザリは抜けています。

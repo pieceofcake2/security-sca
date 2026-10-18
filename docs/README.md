@@ -53,7 +53,7 @@ vendor/bin/security-sca --pdf=tmp/security-sca.pdf --language=ja
 | `--fail-on=RISK` | `SECURITY_SCA_FAIL_ON` | `high` | The lowest risk that fails: `critical`, `high`, `medium`, `low` or `none` |
 | `--no-dev` | `SECURITY_SCA_NO_DEV` | | Leaves out the development packages (`require-dev`); `--no-dev=0` keeps them when the settings file leaves them out |
 | `--project=DIR` | | the current directory | The directory of `composer.json` and `composer.lock` |
-| `--composer=COMMAND` | `SECURITY_SCA_COMPOSER` | `composer` | The Composer command |
+| `--composer=COMMAND` | `SECURITY_SCA_COMPOSER` | `composer` | The Composer command, e.g. `./composer.phar` or `php composer.phar`, with its files relative to the current directory |
 | `--language=LANG` | `SECURITY_REPORT_LANGUAGE` | `en` | `en` or `ja`, or a language of `--locale-dir` |
 | `--locale-dir=DIR` | `SECURITY_REPORT_LOCALE_DIR` | | `<language>.json` files that add or replace messages |
 | `--title=TITLE` | `SECURITY_SCA_TITLE` | the title of the language | The title of the report |
@@ -132,7 +132,9 @@ The risk is the one of the advisory (`critical`, `high`, `medium`, `low`); an ad
 CI, to see the advisories published since.
 
 With Composer 2.10+, a package that matches a filter list of a repository (e.g. a list of malware) is reported as
-a Critical vulnerability, titled with the list and its reason. When Composer cannot reach a repository, the
+a Critical vulnerability, titled with the list and its reason. A list that `config.policy` of `composer.json`
+sets to report only (`"audit": "report"`) gives vulnerabilities of an unknown risk instead, which fail only with
+`--fail-on=low`, as Composer does not fail on them. When Composer cannot reach a repository, the
 audit fails (exit code `2`, `composer audit failed`), unless `audit.ignore-unreachable` of `composer.json` is
 `true`: then Composer audits the other repositories, the report lists the unreachable ones on the cover, the
 command prints them, and the run passes or fails on the advisories that were found, which miss those of the
