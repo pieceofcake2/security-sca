@@ -71,6 +71,9 @@ final class ReportBuilder
 
         $target = $cover->target($environment);
         $target[] = new Row($this->t('field.packages'), (string)$result->packages);
+        if ($result->ignored !== []) {
+            $target[] = new Row($this->t('field.ignored'), $this->t('ignored.count', ['count' => count($result->ignored)]));
+        }
         if ($result->unreachable !== []) {
             $target[] = new Row($this->t('field.unreachable'), implode(', ', $result->unreachable), warning: $this->t('unreachable.warning'), monoValue: true);
         }
@@ -164,6 +167,19 @@ final class ReportBuilder
             $groups[] = $group;
         }
 
+        if ($result->ignored !== []) {
+            $group = new Group(count($groups) + 1, $this->t('group.ignored'));
+            foreach ($result->ignored as $i => $advisory) {
+                $item = $this->advisory($group->no . '-' . ($i + 1), $advisory);
+                // Ignored, whatever its risk: the risk is in the table of the page
+                $item->badge = 'ignored';
+                $item->badgeLabel = $this->t('badge.ignored');
+                array_splice($item->meta, 1, 0, [new Row($this->t('field.ignoreReason'), $advisory->ignoreReason ?? $this->t('ignored.noReason'))]);
+                $group->items[] = $item;
+            }
+            $groups[] = $group;
+        }
+
         if ($result->packageList !== []) {
             $group = new Group(count($groups) + 1, $this->t('group.packages'));
             $group->items[] = new Item(
@@ -200,6 +216,10 @@ final class ReportBuilder
         foreach ($result->advisories as $advisory) {
             $vulnerabilities[$advisory->package] = ($vulnerabilities[$advisory->package] ?? 0) + 1;
         }
+        $ignored = [];
+        foreach ($result->ignored as $advisory) {
+            $ignored[$advisory->package] = ($ignored[$advisory->package] ?? 0) + 1;
+        }
 
         $html = '<table class="packages"><colgroup><col class="name"><col class="version"><col class="kind"><col class="license"><col class="state"></colgroup>'
             . '<thead><tr><th>' . $h($this->t('field.package')) . '</th><th>' . $h($this->t('field.installed')) . '</th><th>'
@@ -209,6 +229,9 @@ final class ReportBuilder
             $state = [];
             if (isset($vulnerabilities[$package->name])) {
                 $state[] = '<span class="t-high">' . $h($this->t('state.vulnerabilities', ['count' => $vulnerabilities[$package->name]])) . '</span>';
+            }
+            if (isset($ignored[$package->name])) {
+                $state[] = $h($this->t('state.ignored', ['count' => $ignored[$package->name]]));
             }
             if (array_key_exists($package->name, $result->abandoned)) {
                 $state[] = $h($this->t('badge.abandoned'));

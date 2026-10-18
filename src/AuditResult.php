@@ -17,6 +17,8 @@ final class AuditResult
      * @param string|null $composerVersion Version of Composer, e.g. `2.8.12`
      * @param array<\PieceOfCake2\SecuritySca\Package> $packageList The audited packages, by name
      * @param array<string> $unreachable Repositories that Composer could not reach: their advisories are missing
+     * @param array<\PieceOfCake2\SecuritySca\Advisory> $ignored Advisories of the installed packages that the project
+     *  ignores (`audit.ignore` of `composer.json`): reported, but they do not fail the audit
      */
     public function __construct(
         public array $advisories = [],
@@ -25,6 +27,7 @@ final class AuditResult
         public ?string $composerVersion = null,
         public array $packageList = [],
         public array $unreachable = [],
+        public array $ignored = [],
     ) {
     }
 

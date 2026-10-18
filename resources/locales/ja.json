@@ -44,5 +44,12 @@
     "state.vulnerabilities": "脆弱性 {count} 件",
     "packages.count": "パッケージ数",
     "field.unreachable": "到達できないリポジトリ",
-    "unreachable.warning": "そのアドバイザリは確かめられませんでした"
+    "unreachable.warning": "そのアドバイザリは確かめられませんでした",
+    "group.ignored": "除外したアドバイザリ",
+    "badge.ignored": "除外",
+    "field.ignored": "除外したアドバイザリ",
+    "field.ignoreReason": "理由",
+    "ignored.count": "{count} 件（composer.json の audit.ignore。不合格にはなりません）",
+    "ignored.noReason": "理由は書かれていません",
+    "state.ignored": "除外 {count} 件"
 }

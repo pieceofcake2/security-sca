@@ -1,7 +1,7 @@
 /* The risks of the vulnerabilities, added to the CSS of pieceofcake2/report */
 :root { --critical: #7a0f12; --high: #b3261e; --medium: #c25e00; --low: #8a6d00; --unknown: #6b6b6b; }
 .badge.critical { background: var(--critical); } .badge.high { background: var(--high); } .badge.medium { background: var(--medium); }
-.badge.low { background: var(--low); } .badge.unknown, .badge.abandoned { background: var(--unknown); }
+.badge.low { background: var(--low); } .badge.unknown, .badge.abandoned, .badge.ignored { background: var(--unknown); }
 .t-critical { color: var(--critical); } .t-high { color: var(--high); } .t-medium { color: var(--medium); } .t-low { color: var(--low); }
 .links { margin: 3mm 0 0; padding-left: 5mm; font-size: 8.5pt; }
 .links li { overflow-wrap: anywhere; }

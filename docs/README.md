@@ -107,7 +107,9 @@ options win over the environment variables, and the environment variables over t
 3. **A page for each vulnerability**: its CVE (or GHSA ID when it has no CVE) and title, risk, package,
    installed and affected versions, the IDs of the advisory, the date of the report, and the links to the
    advisory, the CVE record and the GitHub advisory
-4. **Audited packages**: every package of `composer.lock` (without the development packages with `--no-dev`),
+4. **Ignored advisories**, when `composer.json` ignores some: each with its reason
+   ([Ignoring an Advisory](#ignoring-an-advisory))
+5. **Audited packages**: every package of `composer.lock` (without the development packages with `--no-dev`),
    with its version, whether it is a production or a development package, whether the project requires it
    directly or another package does, its licenses, and its vulnerabilities and whether it is abandoned. It is
    the inventory of what was checked, also when nothing was found
@@ -166,6 +168,11 @@ of `composer audit` and of the report:
 
 The key is the CVE ID, the advisory ID (`PKSA-...`) or the ID of a source of the advisory, e.g. its GHSA ID. Update the package instead when you can:
 an ignored advisory is easily forgotten.
+
+The ignored advisories of the installed packages are still in the report, so that they are not forgotten: their
+number on the cover, a group "Ignored advisories" after the abandoned packages, with a page for each with its
+risk and the reason of `composer.json`, and "1 ignored" in the list of the audited packages. They do not fail the
+run. Give a reason that can be checked again, e.g. "Windows only: the application runs on Linux".
 
 ## Troubleshooting
 

@@ -85,11 +85,12 @@ final class Command
             }
         }
         fwrite($this->stdout, sprintf(
-            "%d vulnerabilities%s in %d packages, %d abandoned packages. Report: %s\n",
+            "%d vulnerabilities%s in %d packages, %d abandoned packages%s. Report: %s\n",
             count($result->advisories),
             $summary === [] ? '' : ' (' . implode(', ', $summary) . ')',
             $result->packages,
             count($result->abandoned),
+            $result->ignored === [] ? '' : sprintf(', %d ignored advisories', count($result->ignored)),
             $config->pdf,
         ));
         if ($result->unreachable !== []) {

@@ -119,6 +119,34 @@ class AuditorTest extends TestCase
         $this->assertTrue($result->fails('critical'));
     }
 
+    public function testIgnoredAdvisories(): void
+    {
+        // As Composer 2.8+ prints the advisories that audit.ignore of composer.json ignores
+        $output = (string)json_encode([
+            'advisories' => [],
+            'ignored-advisories' => ['phpmailer/phpmailer' => [[
+                'advisoryId' => 'PKSA-35kn-2ddp-d3p4',
+                'packageName' => 'phpmailer/phpmailer',
+                'affectedVersions' => '<6.5.0',
+                'title' => 'RCE affecting Windows hosts via UNC paths to translation files',
+                'cve' => 'CVE-2021-34551',
+                'severity' => 'high',
+                'ignoreReason' => 'Windows only: the application runs on Linux',
+            ]]],
+            'abandoned' => [],
+        ]);
+        $commands = [];
+        $result = self::auditor($commands, $output)->audit(self::PROJECT);
+
+        $this->assertSame([], $result->advisories);
+        $this->assertCount(1, $result->ignored);
+        $this->assertSame('CVE-2021-34551', $result->ignored[0]->cve);
+        $this->assertSame('v6.0.0', $result->ignored[0]->installedVersion);
+        $this->assertSame('Windows only: the application runs on Linux', $result->ignored[0]->ignoreReason);
+        // They do not fail the audit
+        $this->assertFalse($result->fails('low'));
+    }
+
     public function testDirectIsCaseInsensitive(): void
     {
         $dir = TMP . 'case' . DS;
