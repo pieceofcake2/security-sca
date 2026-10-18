@@ -24,6 +24,14 @@ class SettingsTest extends TestCase
         ], Settings::options('.', 'sca', $file, 'security-sca.pdf'));
     }
 
+    public function testNullIsNotSet(): void
+    {
+        $file = TMP . 'settings-null.php';
+        file_put_contents($file, "<?php\nreturn ['report' => ['note' => null], 'sca' => ['failOn' => null, 'noDev' => true]];\n");
+
+        $this->assertSame(['no-dev' => true], Settings::options('.', 'sca', $file));
+    }
+
     public function testNoFile(): void
     {
         $this->assertSame([], Settings::options(TMP, 'sca'));

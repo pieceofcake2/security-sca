@@ -92,6 +92,9 @@ final class Command
             count($result->abandoned),
             $config->pdf,
         ));
+        if ($result->unreachable !== []) {
+            fwrite($this->stderr, sprintf("security-sca: these repositories could not be reached, so their advisories are missing: %s\n", implode(', ', $result->unreachable)));
+        }
 
         return $result->fails($config->failOn) ? self::FAILURE : self::SUCCESS;
     }
@@ -132,7 +135,8 @@ final class Command
                 $arguments['no-dev'] = '1';
                 continue;
             }
-            if (!preg_match('/\A--([a-z-]+)=(.*)\z/s', $arg, $matches) || (!array_key_exists($matches[1], $options) && $matches[1] !== 'settings') || $matches[1] === 'no-dev') {
+            // --no-dev=0 turns off the noDev of the settings file
+            if (!preg_match('/\A--([a-z-]+)=(.*)\z/s', $arg, $matches) || (!array_key_exists($matches[1], $options) && $matches[1] !== 'settings')) {
                 throw new InvalidArgumentException(sprintf('Unknown option: %s', $arg));
             }
             $arguments[$matches[1]] = $matches[2];
@@ -185,7 +189,7 @@ Options:
   --pdf=PATH           PDF report (SECURITY_SCA_PDF, default: tmp/security-sca.pdf)
   --fail-on=RISK       Lowest risk that fails: critical, high, medium, low or none
                        (SECURITY_SCA_FAIL_ON, default: high)
-  --no-dev             Leave out the development packages (SECURITY_SCA_NO_DEV)
+  --no-dev             Leave out the development packages (SECURITY_SCA_NO_DEV); --no-dev=0 keeps them
   --project=DIR        Directory of composer.json and composer.lock (default: the current directory)
   --composer=COMMAND   Composer command (SECURITY_SCA_COMPOSER, default: composer)
   --language=LANG      en or ja (SECURITY_REPORT_LANGUAGE, default: en)

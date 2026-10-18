@@ -86,6 +86,16 @@ class ReportBuilderTest extends TestCase
         $this->assertStringContainsString('No known vulnerability was found', $html);
     }
 
+    public function testUnreachableRepositories(): void
+    {
+        $result = new AuditResult([], [], 10, unreachable: ['https://repo.example.com']);
+        $html = self::html(new Config(project: AuditorTest::PROJECT), $result);
+
+        $this->assertStringContainsString('Unreachable repositories', $html);
+        $this->assertStringContainsString('https://repo.example.com', $html);
+        $this->assertStringContainsString('Their advisories could not be checked', $html);
+    }
+
     public function testTitle(): void
     {
         $advisory = new Advisory('PKSA-1', 'acme/lib', 'CVE-2020-15094: Prevent RCE', cve: 'CVE-2020-15094');

@@ -16,6 +16,7 @@ final class AuditResult
      * @param int $packages Number of the audited packages
      * @param string|null $composerVersion Version of Composer, e.g. `2.8.12`
      * @param array<\PieceOfCake2\SecuritySca\Package> $packageList The audited packages, by name
+     * @param array<string> $unreachable Repositories that Composer could not reach: their advisories are missing
      */
     public function __construct(
         public array $advisories = [],
@@ -23,6 +24,7 @@ final class AuditResult
         public int $packages = 0,
         public ?string $composerVersion = null,
         public array $packageList = [],
+        public array $unreachable = [],
     ) {
     }
 

@@ -25,7 +25,8 @@ pieceofcake2 のセキュリティ診断の 1 つで、ほかに [pieceofcake2/s
 
 ## 必要なもの
 
-- PHP 8.0 以上と Composer 2.4 以上 (`composer audit`)
+- PHP 8.0 以上と Composer 2.8 以上 (開発が終了したパッケージとリスクを返す `composer audit`。`composer self-update` で
+  更新できます)
 - プロジェクトの `composer.lock`。これを読んで調べるので、パッケージをインストールしておく必要はありません
 - PDF を印刷するための Google Chrome または Chromium 131 以上。日本語の報告書には、Linux では `fonts-noto-cjk`
 
@@ -45,7 +46,7 @@ vendor/bin/security-sca --pdf=tmp/security-sca.pdf --language=ja
 | --- | --- | --- | --- |
 | `--pdf=PATH` | `SECURITY_SCA_PDF` | `tmp/security-sca.pdf` | PDF の報告書 |
 | `--fail-on=RISK` | `SECURITY_SCA_FAIL_ON` | `high` | 不合格にする最も低いリスク。`critical`、`high`、`medium`、`low`、`none` |
-| `--no-dev` | `SECURITY_SCA_NO_DEV` | | 開発用のパッケージ (`require-dev`) を除きます |
+| `--no-dev` | `SECURITY_SCA_NO_DEV` | | 開発用のパッケージ (`require-dev`) を除きます。設定ファイルで除いているときは、`--no-dev=0` で含めます |
 | `--project=DIR` | | カレントディレクトリ | `composer.json` と `composer.lock` のディレクトリ |
 | `--composer=COMMAND` | `SECURITY_SCA_COMPOSER` | `composer` | Composer のコマンド |
 | `--language=LANG` | `SECURITY_REPORT_LANGUAGE` | `en` | `en` か `ja`、または `--locale-dir` の言語 |
@@ -57,6 +58,9 @@ vendor/bin/security-sca --pdf=tmp/security-sca.pdf --language=ja
 
 終了コードは、`--fail-on` に達する脆弱性がなければ `0`、あれば `1`、調査や報告書の作成に失敗したときは `2` です。リスクが
 不明な脆弱性は、`--fail-on=low` のときだけ不合格になります。
+
+オプションと設定ファイルのパス (`--pdf`、`--project`、`--locale-dir`、報告書の `dir`) は、プロジェクトではなく
+カレントディレクトリからの相対パスです。プロジェクトで実行するか、絶対パスで指定してください。
 
 ### 設定ファイル
 
@@ -84,8 +88,8 @@ return [
 
 ## 報告書
 
-- [見本の報告書 (日本語、PDF)](/report-sample-ja.pdf)
-- [見本の報告書 (英語、PDF)](/report-sample.pdf)
+- [見本の報告書 (日本語、PDF)](https://pieceofcake2.github.io/security-sca/report-sample-ja.pdf)
+- [見本の報告書 (英語、PDF)](https://pieceofcake2.github.io/security-sca/report-sample.pdf)
 
 ![表紙、リスク別の脆弱性、脆弱性のページ](../img/report-sample-ja.png)
 
@@ -112,6 +116,10 @@ return [
 リスクはアドバイザリのもの (`critical`、`high`、`medium`、`low`) で、ないものは `unknown` です。報告書は実行した時点の
 アドバイザリによるものです。その後に公開されたアドバイザリを見るには、CI で毎週など、繰り返し実行してください。
 
+Composer 2.10 以上では、リポジトリのフィルターリスト (マルウェアのリストなど) に当てはまるパッケージを、リストの名前と
+理由を付けて、Critical の脆弱性として報告します。Composer がリポジトリに到達できないときは、そのアドバイザリが
+抜けます。報告書の表紙に到達できないリポジトリを載せ、コマンドも出力します。
+
 ## 開発が終了したパッケージ
 
 作者が Packagist で開発の終了 (abandoned) を示したパッケージを、脆弱性の後に並べます。作者が示していれば、代わりの
@@ -127,7 +135,7 @@ return [
 ## アドバイザリを除外する
 
 Windows だけの脆弱性や、アプリケーションが使わない機能の脆弱性など、アプリケーションに当てはまらないアドバイザリは、
-`composer.json` で理由と一緒に除外します (Composer 2.6 以上)。`composer audit` と報告書から除かれます。
+`composer.json` で理由と一緒に除外します。`composer audit` と報告書から除かれます。
 
 ```json
 {
@@ -151,6 +159,12 @@ Windows だけの脆弱性や、アプリケーションが使わない機能の
 
 **`composer audit failed`**: 続けて Composer のメッセージが出ます。`packagist.org` へのネットワークが許可されていない、
 `composer.lock` が正しくない、などです。`composer audit` はアドバイザリをダウンロードする必要があります。
+
+**`Composer 2.8.0 or later is needed`**: `composer self-update` で Composer を更新するか、`--composer` で新しい
+Composer を指定してください。
+
+**表紙の「到達できないリポジトリ」**: Composer がこれらのリポジトリのアドバイザリをダウンロードできませんでした。CI で
+認証情報のないプライベートリポジトリなどです。ネットワークと `auth.json` を確かめて、もう一度実行してください。
 
 **公開されたばかりのアドバイザリの脆弱性が出ない**: GitHub Advisory Database にまだ載っていません
 ([脆弱性の情報源](#脆弱性の情報源))。

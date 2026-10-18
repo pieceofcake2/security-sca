@@ -42,5 +42,7 @@
     "kind.direct": "直接",
     "kind.indirect": "間接",
     "state.vulnerabilities": "脆弱性 {count} 件",
-    "packages.count": "パッケージ数"
+    "packages.count": "パッケージ数",
+    "field.unreachable": "到達できないリポジトリ",
+    "unreachable.warning": "そのアドバイザリは確かめられませんでした"
 }

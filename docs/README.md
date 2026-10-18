@@ -30,7 +30,8 @@ The code of the application is not checked here: see
 
 ## Requirements
 
-- PHP 8.0+ and Composer 2.4+ (`composer audit`)
+- PHP 8.0+ and Composer 2.8+ (`composer audit` with the abandoned packages and the risks; update it with
+  `composer self-update`)
 - `composer.lock` in the project: the audit reads it, so the packages need not be installed
 - Google Chrome or Chromium 131+ to print the PDF, and on Linux `fonts-noto-cjk` for a Japanese report
 
@@ -50,7 +51,7 @@ vendor/bin/security-sca --pdf=tmp/security-sca.pdf --language=ja
 | --- | --- | --- | --- |
 | `--pdf=PATH` | `SECURITY_SCA_PDF` | `tmp/security-sca.pdf` | The PDF report |
 | `--fail-on=RISK` | `SECURITY_SCA_FAIL_ON` | `high` | The lowest risk that fails: `critical`, `high`, `medium`, `low` or `none` |
-| `--no-dev` | `SECURITY_SCA_NO_DEV` | | Leaves out the development packages (`require-dev`) |
+| `--no-dev` | `SECURITY_SCA_NO_DEV` | | Leaves out the development packages (`require-dev`); `--no-dev=0` keeps them when the settings file leaves them out |
 | `--project=DIR` | | the current directory | The directory of `composer.json` and `composer.lock` |
 | `--composer=COMMAND` | `SECURITY_SCA_COMPOSER` | `composer` | The Composer command |
 | `--language=LANG` | `SECURITY_REPORT_LANGUAGE` | `en` | `en` or `ja`, or a language of `--locale-dir` |
@@ -62,6 +63,10 @@ vendor/bin/security-sca --pdf=tmp/security-sca.pdf --language=ja
 
 The exit code is `0` when no vulnerability reaches `--fail-on`, `1` when one does, and `2` when the audit or
 the report fails. A vulnerability whose risk is not known fails only with `--fail-on=low`.
+
+The paths of the options and of the settings file (`--pdf`, `--project`, `--locale-dir`, `dir` of the report)
+are relative to the current directory, not to the project: run the command in the project, or give absolute
+paths.
 
 ### The Settings File
 
@@ -90,8 +95,8 @@ options win over the environment variables, and the environment variables over t
 
 ## The Report
 
-- [Sample report (English, PDF)](/report-sample.pdf)
-- [Sample report (Japanese, PDF)](/report-sample-ja.pdf)
+- [Sample report (English, PDF)](https://pieceofcake2.github.io/security-sca/report-sample.pdf)
+- [Sample report (Japanese, PDF)](https://pieceofcake2.github.io/security-sca/report-sample-ja.pdf)
 
 ![The cover, the vulnerabilities by risk and the page of a vulnerability](img/report-sample.png)
 
@@ -124,6 +129,10 @@ The risk is the one of the advisory (`critical`, `high`, `medium`, `low`); an ad
 `unknown`. The report is the state of the advisories at the time of the run: run it again, e.g. every week in
 CI, to see the advisories published since.
 
+With Composer 2.10+, a package that matches a filter list of a repository (e.g. a list of malware) is reported as
+a Critical vulnerability, titled with the list and its reason. When Composer cannot reach a repository, its
+advisories are missing: the report lists the unreachable repositories on the cover, and the command prints them.
+
 ## Abandoned Packages
 
 A package that its author has marked as abandoned on Packagist is listed after the vulnerabilities, with the
@@ -140,7 +149,7 @@ CakePHP, the abandoned and the development packages, and staying up to date.
 ## Ignoring an Advisory
 
 When an advisory does not apply to the application, e.g. a vulnerability of Windows only, or of a feature that
-the application does not use, ignore it in `composer.json` with the reason (Composer 2.6+). It is then left out
+the application does not use, ignore it in `composer.json` with the reason. It is then left out
 of `composer audit` and of the report:
 
 ```json
@@ -165,6 +174,12 @@ project with `--project`.
 
 **`composer audit failed`**: the message of Composer follows, e.g. the network to `packagist.org` is not allowed,
 or `composer.lock` is not valid. `composer audit` needs to download the advisories.
+
+**`Composer 2.8.0 or later is needed`**: update Composer with `composer self-update`, or give a newer one with
+`--composer`.
+
+**`Unreachable repositories` on the cover**: Composer could not download the advisories of these repositories,
+e.g. a private repository without its credentials in CI. Check the network and `auth.json`, then run it again.
 
 **The vulnerabilities of an advisory that was just published are missing**: it is not in the GitHub Advisory
 Database yet (see [Where the Vulnerabilities Come From](#where-the-vulnerabilities-come-from)).
