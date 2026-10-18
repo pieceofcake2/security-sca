@@ -86,6 +86,19 @@ class ReportBuilderTest extends TestCase
         $this->assertStringContainsString('No known vulnerability was found', $html);
     }
 
+    public function testIgnoredAdvisories(): void
+    {
+        $ignored = new Advisory('PKSA-1', 'phpmailer/phpmailer', 'RCE on Windows', 'high', 'CVE-2021-34551', '<6.5.0', 'v6.0.0', ignoreReason: 'Windows only: the application runs on Linux');
+        $html = self::html(new Config(project: AuditorTest::PROJECT), new AuditResult([], [], 10, ignored: [$ignored]));
+
+        // Passed, with the ignored advisory on the cover and on a page of its own
+        $this->assertStringContainsString('<div class="verdict passed">', $html);
+        $this->assertMatchesRegularExpression('#<td>\s*1 \(audit\.ignore of composer\.json; they do not fail the audit\)\s*</td>#', $html);
+        $this->assertMatchesRegularExpression('#<h3>1\. Ignored advisories</h3>#', $html);
+        $this->assertStringContainsString('<span class="badge ignored">Ignored</span>', $html);
+        $this->assertStringContainsString('Windows only: the application runs on Linux', $html);
+    }
+
     public function testUnreachableRepositories(): void
     {
         $result = new AuditResult([], [], 10, unreachable: ['https://repo.example.com']);

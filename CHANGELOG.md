@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased
+
+- The advisories that `audit.ignore` of `composer.json` ignores are in the report, with their reasons: their
+  number on the cover, a group "Ignored advisories" with a page for each, and their number in the list of the
+  audited packages and in the summary of the command. They do not fail the run
+
 ## 1.0.1
 
 - Needs Composer 2.8+: the command stops with a message when Composer is older, as `composer audit` of older

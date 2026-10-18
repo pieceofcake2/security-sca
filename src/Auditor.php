@@ -86,6 +86,8 @@ final class Auditor
             $version,
             self::packages($lock, $noDev, $dir . DIRECTORY_SEPARATOR . 'composer.json'),
             array_values(array_map('strval', array_filter((array)($data['unreachable-repositories'] ?? []), 'is_scalar'))),
+            // The advisories that composer.json ignores, with their reasons
+            self::advisories($data['ignored-advisories'] ?? [], $installed),
         );
     }
 
@@ -123,6 +125,7 @@ final class Auditor
                     $reportedAt !== null ? substr($reportedAt, 0, 10) : null,
                     self::string($item['link'] ?? null),
                     $sources,
+                    self::string($item['ignoreReason'] ?? null),
                 );
             }
         }

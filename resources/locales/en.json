@@ -44,5 +44,12 @@
     "state.vulnerabilities": "{count} vulnerabilities",
     "packages.count": "Packages",
     "field.unreachable": "Unreachable repositories",
-    "unreachable.warning": "Their advisories could not be checked"
+    "unreachable.warning": "Their advisories could not be checked",
+    "group.ignored": "Ignored advisories",
+    "badge.ignored": "Ignored",
+    "field.ignored": "Ignored advisories",
+    "field.ignoreReason": "Reason",
+    "ignored.count": "{count} (audit.ignore of composer.json; they do not fail the audit)",
+    "ignored.noReason": "No reason is given",
+    "state.ignored": "{count} ignored"
 }

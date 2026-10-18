@@ -21,6 +21,8 @@ final class Advisory
      * @param string|null $reportedAt Date of the report, e.g. `2021-06-16`
      * @param string|null $link Link to the advisory or the fix
      * @param array<array{name: string, id: string}> $sources Sources and their IDs, e.g. `GitHub` and its GHSA ID
+     * @param string|null $ignoreReason Why the project ignores it (`audit.ignore` of `composer.json`), for an ignored
+     *  advisory
      */
     public function __construct(
         public string $id,
@@ -33,6 +35,7 @@ final class Advisory
         public ?string $reportedAt = null,
         public ?string $link = null,
         public array $sources = [],
+        public ?string $ignoreReason = null,
     ) {
     }
 
