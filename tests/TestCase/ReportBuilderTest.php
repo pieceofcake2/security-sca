@@ -99,6 +99,15 @@ class ReportBuilderTest extends TestCase
         $this->assertStringContainsString('Windows only: the application runs on Linux', $html);
     }
 
+    public function testIgnoredInThePackages(): void
+    {
+        $packages = AuditorTest::auditor()->audit(AuditorTest::PROJECT)->packageList;
+        $ignored = new Advisory('PKSA-1', 'phpmailer/phpmailer', 'RCE on Windows', 'high', ignoreReason: 'Windows only');
+        $html = self::html(new Config(project: AuditorTest::PROJECT), new AuditResult([], [], 5, null, $packages, ignored: [$ignored]));
+
+        $this->assertStringContainsString('<tr><td class="mono">phpmailer/phpmailer</td><td class="mono">v6.0.0</td><td>Production・direct</td><td>LGPL-2.1-only</td><td>1 ignored</td></tr>', $html);
+    }
+
     public function testUnreachableRepositories(): void
     {
         $result = new AuditResult([], [], 10, unreachable: ['https://repo.example.com']);
