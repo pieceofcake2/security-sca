@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased
+
+- A package whose name in `composer.lock` has capitals, e.g. of a private repository, gets its installed version on
+  the page of its advisories and its vulnerabilities in the list of the packages: the advisories name it in lower
+  case
+
 ## 1.0.2
 
 - The advisories that `audit.ignore` of `composer.json` ignores are in the report, with their reasons: their
