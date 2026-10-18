@@ -132,8 +132,11 @@ The risk is the one of the advisory (`critical`, `high`, `medium`, `low`); an ad
 CI, to see the advisories published since.
 
 With Composer 2.10+, a package that matches a filter list of a repository (e.g. a list of malware) is reported as
-a Critical vulnerability, titled with the list and its reason. When Composer cannot reach a repository, its
-advisories are missing: the report lists the unreachable repositories on the cover, and the command prints them.
+a Critical vulnerability, titled with the list and its reason. When Composer cannot reach a repository, the
+audit fails (exit code `2`, `composer audit failed`), unless `audit.ignore-unreachable` of `composer.json` is
+`true`: then Composer audits the other repositories, the report lists the unreachable ones on the cover, the
+command prints them, and the run passes or fails on the advisories that were found, which miss those of the
+unreachable repositories.
 
 ## Abandoned Packages
 
@@ -185,8 +188,9 @@ or `composer.lock` is not valid. `composer audit` needs to download the advisori
 **`Composer 2.8.0 or later is needed`**: update Composer with `composer self-update`, or give a newer one with
 `--composer`.
 
-**`Unreachable repositories` on the cover**: Composer could not download the advisories of these repositories,
-e.g. a private repository without its credentials in CI. Check the network and `auth.json`, then run it again.
+**`Unreachable repositories` on the cover**: with `audit.ignore-unreachable`, Composer could not download the
+advisories of these repositories, e.g. a private repository without its credentials in CI, and their advisories
+are missing although the run may pass. Check the network and `auth.json`, then run it again.
 
 **The vulnerabilities of an advisory that was just published are missing**: it is not in the GitHub Advisory
 Database yet (see [Where the Vulnerabilities Come From](#where-the-vulnerabilities-come-from)).
