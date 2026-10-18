@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 1.0.2
 
 - The advisories that `audit.ignore` of `composer.json` ignores are in the report, with their reasons: their
   number on the cover, a group "Ignored advisories" with a page for each, and their number in the list of the
