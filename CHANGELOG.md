@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 1.0.1
 
 - Needs Composer 2.8+: the command stops with a message when Composer is older, as `composer audit` of older
   versions cannot report the abandoned packages and the risks
