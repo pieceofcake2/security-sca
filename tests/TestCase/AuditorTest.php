@@ -162,6 +162,41 @@ class AuditorTest extends TestCase
         $this->assertSame('1.0.0', $result->advisories[0]->installedVersion);
     }
 
+    public function testComposerOfWordsWithMuchErrorOutput(): void
+    {
+        // php and a script, run for real: a large error output does not block the audit
+        $auditor = new Auditor(PHP_BINARY . ' ' . __DIR__ . DS . '..' . DS . 'fixtures' . DS . 'fake-composer.php');
+
+        $result = $auditor->audit(self::PROJECT);
+
+        $this->assertSame('2.10.3', $result->composerVersion);
+        $this->assertSame([], $result->advisories);
+    }
+
+    public function testComposerCommand(): void
+    {
+        $this->assertSame(['composer'], (new Auditor())->composerCommand());
+        // Words, with the files of the current directory as absolute paths
+        $this->assertSame(['php', (string)realpath('composer.json'), '--no-ansi'], (new Auditor('php composer.json --no-ansi'))->composerCommand());
+    }
+
+    public function testFilterListThatOnlyReports(): void
+    {
+        $dir = TMP . 'policy' . DS;
+        is_dir($dir) || mkdir($dir);
+        copy(self::PROJECT . DS . 'composer.lock', $dir . 'composer.lock');
+        file_put_contents($dir . 'composer.json', '{"config": {"policy": {"acme-review": {"audit": "report"}}}}');
+        $entry = static fn(string $list): array => ['packageName' => 'symfony/debug', 'listName' => $list, 'constraint' => '*', 'reason' => 'Listed'];
+        $output = (string)json_encode(['advisories' => [], 'abandoned' => [], 'filter' => ['symfony/debug' => [$entry('malware'), $entry('acme-review')]]]);
+        $commands = [];
+
+        $result = self::auditor($commands, $output)->audit($dir);
+
+        // Composer fails on malware by default, not on a list that only reports
+        $severities = array_combine(array_map(static fn($advisory): string => $advisory->sources[0]['name'], $result->advisories), array_map(static fn($advisory): string => $advisory->severity, $result->advisories));
+        $this->assertSame(['malware' => 'critical', 'acme-review' => 'unknown'], $severities);
+    }
+
     public function testDirectIsCaseInsensitive(): void
     {
         $dir = TMP . 'case' . DS;

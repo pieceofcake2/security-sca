@@ -55,13 +55,13 @@ final class Auditor
         }
         $installed = self::installed($lock, $noDev);
 
-        [$versionCode, $versionOutput] = ($this->run)([$this->composer, '--version', '--no-ansi'], $dir);
+        [$versionCode, $versionOutput] = ($this->run)([...$this->composerCommand(), '--version', '--no-ansi'], $dir);
         $version = $versionCode === 0 && preg_match('/(\d+\.\d+\.\d+\S*)/', $versionOutput, $matches) ? $matches[1] : null;
         if ($version !== null && version_compare($version, self::COMPOSER_VERSION, '<')) {
             throw new RuntimeException(sprintf('Composer %s or later is needed (for the abandoned packages and the risks of composer audit), %s is installed: update it with composer self-update.', self::COMPOSER_VERSION, $version));
         }
 
-        $command = [$this->composer, 'audit', '--locked', '--format=json', '--no-interaction', '--no-plugins', '--abandoned=report'];
+        $command = [...$this->composerCommand(), 'audit', '--locked', '--format=json', '--no-interaction', '--no-plugins', '--abandoned=report'];
         if ($noDev) {
             $command[] = '--no-dev';
         }
@@ -76,7 +76,7 @@ final class Auditor
             throw new RuntimeException('composer audit did not return a JSON object.');
         }
 
-        $advisories = array_merge(self::advisories($data['advisories'] ?? [], $installed), self::filtered($data['filter'] ?? [], $installed));
+        $advisories = array_merge(self::advisories($data['advisories'] ?? [], $installed), self::filtered($data['filter'] ?? [], $installed, self::reportedLists($dir . DIRECTORY_SEPARATOR . 'composer.json')));
         usort($advisories, [self::class, 'compare']);
 
         return new AuditResult(
@@ -135,13 +135,16 @@ final class Auditor
     }
 
     /**
-     * The packages that the filter lists of Composer (2.10+) matched, e.g. a list of malware, as critical advisories
+     * The packages that the filter lists of Composer (2.10+) matched, e.g. a list of malware, as critical advisories;
+     * those of a list that only reports (`"audit": "report"`) as advisories of an unknown risk, which fail only with
+     * `--fail-on=low`, as Composer does not fail on them
      *
      * @param mixed $data `filter` of the JSON: the entries of the lists by package
      * @param array<string, string> $installed Installed versions by package
+     * @param array<string> $reported The lists that only report
      * @return array<\PieceOfCake2\SecuritySca\Advisory>
      */
-    public static function filtered(mixed $data, array $installed = []): array
+    public static function filtered(mixed $data, array $installed = [], array $reported = []): array
     {
         $advisories = [];
         foreach (is_array($data) ? $data : [] as $package => $entries) {
@@ -157,7 +160,7 @@ final class Auditor
                     $id ?? $list,
                     $name,
                     sprintf('Listed in %s%s', $list, $reason !== null ? ': ' . $reason : ''),
-                    Severity::CRITICAL,
+                    in_array($list, $reported, true) ? Severity::UNKNOWN : Severity::CRITICAL,
                     null,
                     (string)($entry['constraint'] ?? ''),
                     $installed[strtolower($name)] ?? null,
@@ -169,6 +172,27 @@ final class Auditor
         }
 
         return $advisories;
+    }
+
+    /**
+     * The filter lists that `config.policy` of `composer.json` sets to report only; by default, Composer fails on
+     * every list, e.g. `malware`
+     *
+     * @param string $json Path of `composer.json`
+     * @return array<string>
+     */
+    public static function reportedLists(string $json): array
+    {
+        $data = is_file($json) ? json_decode((string)file_get_contents($json), true) : null;
+        $policy = is_array($data) && is_array($data['config']['policy'] ?? null) ? $data['config']['policy'] : [];
+        $reported = [];
+        foreach ($policy as $list => $config) {
+            if (is_array($config) && ($config['audit'] ?? null) === 'report') {
+                $reported[] = (string)$list;
+            }
+        }
+
+        return $reported;
     }
 
     /**
@@ -273,6 +297,20 @@ final class Auditor
     }
 
     /**
+     * The Composer command as arguments: a file, e.g. `./composer.phar`, or words, e.g. `php composer.phar`, with the
+     * files relative to the current directory, as the other paths of the options, although Composer runs in the
+     * project
+     *
+     * @return array<string>
+     */
+    public function composerCommand(): array
+    {
+        $words = is_file($this->composer) ? [$this->composer] : (preg_split('/\s+/', trim($this->composer)) ?: []);
+
+        return array_values(array_map(static fn(string $word): string => is_file($word) ? (string)realpath($word) : $word, array_filter($words, static fn(string $word): bool => $word !== '')));
+    }
+
+    /**
      * Runs a command
      *
      * @param array<string> $command Command and arguments
@@ -282,15 +320,25 @@ final class Auditor
      */
     private static function exec(array $command, string $dir): array
     {
-        $process = proc_open($command, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, $dir);
+        $out = tmpfile();
+        $err = tmpfile();
+        if ($out === false || $err === false) {
+            throw new RuntimeException('Cannot create the temporary files of a command.');
+        }
+        // Files instead of pipes: Composer would wait to write a large error output, e.g. of deprecation notices,
+        // while this process waits for the end of its output
+        $process = proc_open($command, [1 => $out, 2 => $err], $pipes, $dir);
         if (!is_resource($process)) {
             throw new RuntimeException(sprintf('Cannot run %s.', $command[0]));
         }
-        $output = (string)stream_get_contents($pipes[1]);
-        $error = (string)stream_get_contents($pipes[2]);
-        fclose($pipes[1]);
-        fclose($pipes[2]);
+        $code = proc_close($process);
+        rewind($out);
+        rewind($err);
+        $output = (string)stream_get_contents($out);
+        $error = (string)stream_get_contents($err);
+        fclose($out);
+        fclose($err);
 
-        return [proc_close($process), $output, $error];
+        return [$code, $output, $error];
     }
 }
