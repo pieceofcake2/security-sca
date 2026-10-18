@@ -147,6 +147,21 @@ class AuditorTest extends TestCase
         $this->assertFalse($result->fails('low'));
     }
 
+    public function testPackageNamesOfOtherCase(): void
+    {
+        // A package of a private repository whose name has capitals; the advisories name it in lower case
+        $dir = TMP . 'pretty' . DS;
+        is_dir($dir) || mkdir($dir);
+        file_put_contents($dir . 'composer.lock', (string)json_encode(['packages' => [['name' => 'Acme/Lib', 'version' => '1.0.0']], 'packages-dev' => []]));
+        file_put_contents($dir . 'composer.json', '{"require": {"Acme/Lib": "^1.0"}}');
+        $output = (string)json_encode(['advisories' => ['acme/lib' => [['advisoryId' => 'PKSA-1', 'packageName' => 'acme/lib', 'title' => 'XSS', 'severity' => 'high', 'affectedVersions' => '<1.1']]], 'abandoned' => []]);
+        $commands = [];
+
+        $result = self::auditor($commands, $output)->audit($dir);
+
+        $this->assertSame('1.0.0', $result->advisories[0]->installedVersion);
+    }
+
     public function testDirectIsCaseInsensitive(): void
     {
         $dir = TMP . 'case' . DS;

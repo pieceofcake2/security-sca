@@ -121,7 +121,7 @@ final class Auditor
                     Severity::normalize($item['severity'] ?? null),
                     self::string($item['cve'] ?? null),
                     (string)($item['affectedVersions'] ?? ''),
-                    $installed[$name] ?? null,
+                    $installed[strtolower($name)] ?? null,
                     $reportedAt !== null ? substr($reportedAt, 0, 10) : null,
                     self::string($item['link'] ?? null),
                     $sources,
@@ -160,7 +160,7 @@ final class Auditor
                     Severity::CRITICAL,
                     null,
                     (string)($entry['constraint'] ?? ''),
-                    $installed[$name] ?? $installed[strtolower($name)] ?? null,
+                    $installed[strtolower($name)] ?? null,
                     null,
                     self::string($entry['url'] ?? null),
                     [['name' => $list, 'id' => $id ?? $name]],
@@ -252,7 +252,8 @@ final class Auditor
         foreach ($noDev ? ['packages'] : ['packages', 'packages-dev'] as $key) {
             foreach (is_array($data) && is_array($data[$key] ?? null) ? $data[$key] : [] as $package) {
                 if (is_array($package) && isset($package['name'], $package['version'])) {
-                    $installed[(string)$package['name']] = (string)$package['version'];
+                    // By the name in lower case: Composer compares the names so, and the advisories give them so
+                    $installed[strtolower((string)$package['name'])] = (string)$package['version'];
                 }
             }
         }

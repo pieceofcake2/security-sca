@@ -214,11 +214,11 @@ final class ReportBuilder
         $h = static fn(string $text): string => htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $vulnerabilities = [];
         foreach ($result->advisories as $advisory) {
-            $vulnerabilities[$advisory->package] = ($vulnerabilities[$advisory->package] ?? 0) + 1;
+            $vulnerabilities[strtolower($advisory->package)] = ($vulnerabilities[strtolower($advisory->package)] ?? 0) + 1;
         }
         $ignored = [];
         foreach ($result->ignored as $advisory) {
-            $ignored[$advisory->package] = ($ignored[$advisory->package] ?? 0) + 1;
+            $ignored[strtolower($advisory->package)] = ($ignored[strtolower($advisory->package)] ?? 0) + 1;
         }
 
         $html = '<table class="packages"><colgroup><col class="name"><col class="version"><col class="kind"><col class="license"><col class="state"></colgroup>'
@@ -227,13 +227,15 @@ final class ReportBuilder
         foreach ($result->packageList as $package) {
             $kind = $this->t($package->dev ? 'kind.dev' : 'kind.prod') . '・' . $this->t($package->direct ? 'kind.direct' : 'kind.indirect');
             $state = [];
-            if (isset($vulnerabilities[$package->name])) {
-                $state[] = '<span class="t-high">' . $h($this->t('state.vulnerabilities', ['count' => $vulnerabilities[$package->name]])) . '</span>';
+            // The advisories give the names in lower case, composer.lock as the package writes them
+            $key = strtolower($package->name);
+            if (isset($vulnerabilities[$key])) {
+                $state[] = '<span class="t-high">' . $h($this->t('state.vulnerabilities', ['count' => $vulnerabilities[$key]])) . '</span>';
             }
-            if (isset($ignored[$package->name])) {
-                $state[] = $h($this->t('state.ignored', ['count' => $ignored[$package->name]]));
+            if (isset($ignored[$key])) {
+                $state[] = $h($this->t('state.ignored', ['count' => $ignored[$key]]));
             }
-            if (array_key_exists($package->name, $result->abandoned)) {
+            if (array_key_exists($key, array_change_key_case($result->abandoned))) {
                 $state[] = $h($this->t('badge.abandoned'));
             }
             $html .= '<tr><td class="mono">' . $h($package->name) . '</td><td class="mono">' . $h($package->version) . '</td><td>' . $h($kind) . '</td><td>'
