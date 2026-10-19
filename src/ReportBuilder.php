@@ -181,22 +181,30 @@ final class ReportBuilder
         }
 
         if ($result->packageList !== []) {
+            // The production packages, then the development packages (packages-dev of composer.lock)
             $group = new Group(count($groups) + 1, $this->t('group.packages'));
-            $group->items[] = new Item(
-                $group->no . '-1',
-                $this->t('packages.title'),
-                // Not "list", the class of the list page, which breaks the page after it
-                'inventory',
-                $this->t('badge.list'),
-                (string)count($result->packageList),
-                [
-                    new Row($this->t('packages.count'), (string)count($result->packageList)),
-                    new Row($this->t('packages.direct'), (string)count(array_filter($result->packageList, static fn(Package $package): bool => $package->direct))),
-                    new Row($this->t('packages.dev'), (string)count(array_filter($result->packageList, static fn(Package $package): bool => $package->dev))),
-                ],
-                $this->t('packages.description'),
-                body: $this->packages($result),
-            );
+            foreach (['prod' => false, 'dev' => true] as $kind => $dev) {
+                $packages = array_values(array_filter($result->packageList, static fn(Package $package): bool => $package->dev === $dev));
+                if ($packages === []) {
+                    continue;
+                }
+                $vulnerable = array_unique(array_map(static fn(Advisory $advisory): string => strtolower($advisory->package), $result->advisories));
+                $group->items[] = new Item(
+                    $group->no . '-' . (count($group->items) + 1),
+                    $this->t('packages.title.' . $kind),
+                    // Not "list", the class of the list page, which breaks the page after it
+                    'inventory',
+                    $this->t('badge.list'),
+                    (string)count($packages),
+                    [
+                        new Row($this->t('packages.count'), (string)count($packages)),
+                        new Row($this->t('packages.direct'), (string)count(array_filter($packages, static fn(Package $package): bool => $package->direct))),
+                        new Row($this->t('packages.vulnerable'), (string)count(array_filter($packages, static fn(Package $package): bool => in_array(strtolower($package->name), $vulnerable, true)))),
+                    ],
+                    $this->t('packages.description.' . $kind),
+                    body: $this->packages($result, $packages),
+                );
+            }
             $groups[] = $group;
         }
 
@@ -207,9 +215,10 @@ final class ReportBuilder
      * The table of the audited packages, with their vulnerabilities
      *
      * @param \PieceOfCake2\SecuritySca\AuditResult $result Audit
+     * @param array<\PieceOfCake2\SecuritySca\Package> $packages The packages of the table
      * @return string HTML
      */
-    private function packages(AuditResult $result): string
+    private function packages(AuditResult $result, array $packages): string
     {
         $h = static fn(string $text): string => htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $vulnerabilities = [];
@@ -224,8 +233,9 @@ final class ReportBuilder
         $html = '<table class="packages"><colgroup><col class="name"><col class="version"><col class="kind"><col class="license"><col class="state"></colgroup>'
             . '<thead><tr><th>' . $h($this->t('field.package')) . '</th><th>' . $h($this->t('field.installed')) . '</th><th>'
             . $h($this->t('field.kind')) . '</th><th>' . $h($this->t('field.license')) . '</th><th>' . $h($this->t('field.state')) . '</th></tr></thead><tbody>';
-        foreach ($result->packageList as $package) {
-            $kind = $this->t($package->dev ? 'kind.dev' : 'kind.prod') . '・' . $this->t($package->direct ? 'kind.direct' : 'kind.indirect');
+        foreach ($packages as $package) {
+            // Production or development is the page; the kind is whether the project requires it
+            $kind = $this->t($package->direct ? 'kind.direct' : 'kind.indirect');
             $state = [];
             // The advisories give the names in lower case, composer.lock as the package writes them
             $key = strtolower($package->name);
