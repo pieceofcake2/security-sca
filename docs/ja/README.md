@@ -91,11 +91,16 @@ return [
 - [見本の報告書 (日本語、PDF)](https://pieceofcake2.github.io/security-sca/report-sample-ja.pdf)
 - [見本の報告書 (英語、PDF)](https://pieceofcake2.github.io/security-sca/report-sample.pdf)
 
-![表紙、リスク別の脆弱性、脆弱性のページ](../img/report-sample-ja.png)
+![表紙、リスク別の脆弱性、脆弱性のページ、本番用のパッケージ](../img/report-sample-ja.png)
+
+見本は、テストのフィクスチャーのプロジェクトを記録した検査から
+[docs/examples/report-sample.php](https://github.com/pieceofcake2/security-sca/blob/1.x/docs/examples/report-sample.php)
+で作ります。
 
 1. **表紙**: 結果、リスクごとの脆弱性の数、リポジトリ、ブランチ、コミット、検査したパッケージの数、不合格の基準、実行の
    日時、環境、ソフトウェア
-2. **リスク別の脆弱性**: 緊急、高、中、低、不明の順に並べ、最後に開発が終了したパッケージ。それぞれのページへのリンク付き
+2. **リスク別の脆弱性**: 緊急、高、中、低の順に、脆弱性が無くても「なし」と載せます。不明は脆弱性があるときに載ります。
+   最後に開発が終了したパッケージ。それぞれのページへのリンク付き
 3. **脆弱性ごとのページ**: CVE (CVE がないものは GHSA ID) とタイトル、リスク、パッケージ、導入バージョンと影響する
    バージョン、アドバイザリの ID、公開日、アドバイザリ、CVE のレコード、GitHub のアドバイザリへのリンク
 4. **除外したアドバイザリ**: `composer.json` で除外したものがあるとき。それぞれの理由も載せます

@@ -98,12 +98,15 @@ options win over the environment variables, and the environment variables over t
 - [Sample report (English, PDF)](https://pieceofcake2.github.io/security-sca/report-sample.pdf)
 - [Sample report (Japanese, PDF)](https://pieceofcake2.github.io/security-sca/report-sample-ja.pdf)
 
-![The cover, the vulnerabilities by risk and the page of a vulnerability](img/report-sample.png)
+![The cover, the vulnerabilities by risk, the page of a vulnerability and the production packages](img/report-sample.png)
+
+The samples are built from the recorded audit of the fixture project of the tests with
+[docs/examples/report-sample.php](https://github.com/pieceofcake2/security-sca/blob/1.x/docs/examples/report-sample.php).
 
 1. **Cover**: the result, the numbers of vulnerabilities by risk, the repository, branch and commit, the
    number of audited packages, the threshold, and the date, environment and software of the run
-2. **Vulnerabilities by risk**: Critical, High, Medium, Low and Unknown, then the abandoned packages; each
-   links to its page
+2. **Vulnerabilities by risk**: Critical, High, Medium and Low, also without vulnerabilities (`None`), and Unknown
+   when there are some, then the abandoned packages; each links to its page
 3. **A page for each vulnerability**: its CVE (or GHSA ID when it has no CVE) and title, risk, package,
    installed and affected versions, the IDs of the advisory, the date of the report, and the links to the
    advisory, the CVE record and the GitHub advisory
