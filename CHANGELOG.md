@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 1.1.0
 
 - The vulnerabilities by risk show Critical, High, Medium and Low also without vulnerabilities (`None`,
   pieceofcake2/report 1.1), so that a reader tells a risk without vulnerabilities from one that was left out.
