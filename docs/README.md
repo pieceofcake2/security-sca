@@ -109,10 +109,11 @@ options win over the environment variables, and the environment variables over t
    advisory, the CVE record and the GitHub advisory
 4. **Ignored advisories**, when `composer.json` ignores some: each with its reason
    ([Ignoring an Advisory](#ignoring-an-advisory))
-5. **Audited packages**: every package of `composer.lock` (without the development packages with `--no-dev`),
-   with its version, whether it is a production or a development package, whether the project requires it
-   directly or another package does, its licenses, and its vulnerabilities and whether it is abandoned. It is
-   the inventory of what was checked, also when nothing was found
+5. **Audited packages**: a page for the production packages (`packages` of `composer.lock`) and one for the
+   development packages (`packages-dev`, left out with `--no-dev`), each with the numbers of packages, of direct
+   ones and of vulnerable ones, then every package with its version, whether the project requires it directly
+   or another package does, its licenses, and its vulnerabilities and whether it is abandoned. It is the
+   inventory of what was checked, also when nothing was found
 
 The vulnerabilities are those of the security advisories of Packagist at the time of the run: the GitHub
 Advisory Database (reviewed advisories) and the FriendsOfPHP security advisories.

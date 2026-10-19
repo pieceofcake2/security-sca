@@ -36,10 +36,22 @@ class ReportBuilderTest extends TestCase
     {
         $html = self::html(new Config(project: AuditorTest::PROJECT));
 
-        $this->assertStringContainsString('Packages of composer.lock', $html);
-        $this->assertMatchesRegularExpression('#<tr><td class="mono">phpmailer/phpmailer</td><td class="mono">v6.0.0</td><td>Production・direct</td><td>LGPL-2.1-only</td><td><span class="t-high">\d+ vulnerabilities</span></td></tr>#', $html);
-        $this->assertStringContainsString('<tr><td class="mono">symfony/debug</td><td class="mono">v4.4.44</td><td>Production・indirect</td><td>MIT</td><td>Abandoned</td></tr>', $html);
-        $this->assertStringContainsString('<tr><td class="mono">phpunit/phpunit</td><td class="mono">9.6.0</td><td>Development・indirect</td><td>BSD-3-Clause</td><td>-</td></tr>', $html);
+        // The production packages, then the development packages, each on a page of its own
+        $this->assertMatchesRegularExpression('#<h3>\d+-1　Production packages</h3>.*phpmailer/phpmailer.*<h3>\d+-2　Development packages</h3>.*phpunit/phpunit#su', $html);
+        $this->assertDoesNotMatchRegularExpression('#Development packages</h3>.*phpmailer/phpmailer#su', $html);
+        $this->assertMatchesRegularExpression('#<tr><td class="mono">phpmailer/phpmailer</td><td class="mono">v6.0.0</td><td>Direct</td><td>LGPL-2.1-only</td><td><span class="t-high">\d+ vulnerabilities</span></td></tr>#', $html);
+        $this->assertStringContainsString('<tr><td class="mono">symfony/debug</td><td class="mono">v4.4.44</td><td>Indirect</td><td>MIT</td><td>Abandoned</td></tr>', $html);
+        $this->assertStringContainsString('<tr><td class="mono">phpunit/phpunit</td><td class="mono">9.6.0</td><td>Indirect</td><td>BSD-3-Clause</td><td>-</td></tr>', $html);
+    }
+
+    public function testPackagesWithoutDevelopment(): void
+    {
+        // --no-dev: the production packages only
+        $result = AuditorTest::auditor()->audit(AuditorTest::PROJECT, true);
+        $html = self::html(new Config(project: AuditorTest::PROJECT, noDev: true), $result);
+
+        $this->assertStringContainsString('Production packages', $html);
+        $this->assertStringNotContainsString('Development packages', $html);
     }
 
     public function testReport(): void
@@ -106,7 +118,7 @@ class ReportBuilderTest extends TestCase
         $ignored = new Advisory('PKSA-1', 'phpmailer/phpmailer', 'RCE on Windows', 'high', ignoreReason: 'Windows only');
         $html = self::html(new Config(project: AuditorTest::PROJECT), new AuditResult([], [], 5, null, $packages, ignored: [$ignored]));
 
-        $this->assertStringContainsString('<tr><td class="mono">phpmailer/phpmailer</td><td class="mono">v6.0.0</td><td>Production・direct</td><td>LGPL-2.1-only</td><td>1 ignored</td></tr>', $html);
+        $this->assertStringContainsString('<tr><td class="mono">phpmailer/phpmailer</td><td class="mono">v6.0.0</td><td>Direct</td><td>LGPL-2.1-only</td><td>1 ignored</td></tr>', $html);
     }
 
     public function testPackagesOfOtherCase(): void
@@ -115,7 +127,7 @@ class ReportBuilderTest extends TestCase
         $packages = [new Package('Acme/Lib', '1.0.0', false, true, ['MIT'])];
         $html = self::html(new Config(project: AuditorTest::PROJECT), new AuditResult([new Advisory('PKSA-1', 'acme/lib', 'XSS', 'high')], ['acme/lib' => null], 1, null, $packages));
 
-        $this->assertStringContainsString('<td class="mono">Acme/Lib</td><td class="mono">1.0.0</td><td>Production・direct</td><td>MIT</td><td><span class="t-high">1 vulnerabilities</span>、Abandoned</td>', $html);
+        $this->assertStringContainsString('<td class="mono">Acme/Lib</td><td class="mono">1.0.0</td><td>Direct</td><td>MIT</td><td><span class="t-high">1 vulnerabilities</span>、Abandoned</td>', $html);
     }
 
     public function testUnreachableRepositories(): void

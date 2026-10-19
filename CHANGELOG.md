@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Unreleased
+
+- The audited packages of the report are on two pages, the production packages and the development packages,
+  each with the numbers of packages, of direct ones and of vulnerable ones
+
 ## 1.0.3
 
 - A large error output of Composer, e.g. many deprecation notices, no longer blocks the audit: it waited for the
