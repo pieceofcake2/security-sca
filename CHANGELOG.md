@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 1.0.3
 
 - A large error output of Composer, e.g. many deprecation notices, no longer blocks the audit: it waited for the
   output while Composer waited to write its errors
