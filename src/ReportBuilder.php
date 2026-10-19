@@ -127,7 +127,8 @@ final class ReportBuilder
     }
 
     /**
-     * The vulnerabilities by risk, then the abandoned packages
+     * The vulnerabilities by risk (every risk of the cover, also without vulnerabilities), then the abandoned
+     * packages
      *
      * @param \PieceOfCake2\SecuritySca\AuditResult $result Audit
      * @return array<\PieceOfCake2\Report\Group>
@@ -137,7 +138,9 @@ final class ReportBuilder
         $groups = [];
         foreach (Severity::ALL as $severity) {
             $advisories = array_values(array_filter($result->advisories, static fn(Advisory $advisory): bool => $advisory->severity === $severity));
-            if ($advisories === []) {
+            // Every risk of the cover, also without vulnerabilities, so that a reader tells none from left out;
+            // Unknown only with some, as on the cover
+            if ($advisories === [] && $severity === Severity::UNKNOWN) {
                 continue;
             }
             $group = new Group(count($groups) + 1, $this->t('severity.' . $severity));

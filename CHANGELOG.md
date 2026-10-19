@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 1.1.0
+
+- The vulnerabilities by risk show Critical, High, Medium and Low also without vulnerabilities (`None`,
+  pieceofcake2/report 1.1), so that a reader tells a risk without vulnerabilities from one that was left out.
+  Unknown is shown when there are some, as on the cover
+- The samples of the docs are built with `docs/examples/report-sample.php`, from the recorded audit of the fixture
+  project, and show the report of this version
+
 ## 1.0.4
 
 - The audited packages of the report are on two pages, the production packages and the development packages,

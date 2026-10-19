@@ -69,7 +69,10 @@ class ReportBuilderTest extends TestCase
         $this->assertStringContainsString('Composer 2.8.12', $html);
 
         // The vulnerabilities by risk, then the abandoned packages
-        $this->assertMatchesRegularExpression('#<h3>1\. High</h3>.*<h3>2\. Medium</h3>.*<h3>3\. Abandoned packages</h3>#s', $html);
+        // Every risk of the cover, also without vulnerabilities
+        $this->assertMatchesRegularExpression('#<h3>1\. Critical</h3>\s*<p class="empty">None</p>#', $html);
+        $this->assertMatchesRegularExpression('#<h3>2\. High</h3>.*<h3>3\. Medium</h3>.*<h3>4\. Low</h3>\s*<p class="empty">None</p>.*<h3>5\. Abandoned packages</h3>#s', $html);
+        $this->assertStringNotContainsString('. Unknown</h3>', $html);
         $this->assertStringContainsString('<span class="badge high">High</span>', $html);
         $this->assertStringContainsString('<td class="num">phpmailer/phpmailer</td>', $html);
         $this->assertStringContainsString('<td class="mono">v6.0.0</td>', $html);
@@ -86,7 +89,8 @@ class ReportBuilderTest extends TestCase
         $this->assertStringContainsString('<h1>ソフトウェア構成分析報告書</h1>', $html);
         $this->assertStringContainsString('<div class="verdict passed">', $html);
         $this->assertMatchesRegularExpression('#<td>\s*緊急以上\s*</td>#', $html);
-        $this->assertStringContainsString('<h3>1. 高</h3>', $html);
+        $this->assertMatchesRegularExpression('#<h3>1\. 緊急</h3>\s*<p class="empty">なし</p>#', $html);
+        $this->assertStringContainsString('<h3>2. 高</h3>', $html);
     }
 
     public function testNoVulnerability(): void
@@ -97,6 +101,9 @@ class ReportBuilderTest extends TestCase
         $this->assertStringContainsString('<div class="verdict passed">', $html);
         $this->assertMatchesRegularExpression('#<td>\s*None \(the report only\)\s*</td>#', $html);
         $this->assertStringContainsString('No known vulnerability was found', $html);
+        // The risks without vulnerabilities are listed as such
+        $this->assertSame(4, substr_count($html, '<p class="empty">None</p>'));
+        $this->assertStringContainsString('<h3>4. Low</h3>', $html);
     }
 
     public function testIgnoredAdvisories(): void
@@ -107,7 +114,7 @@ class ReportBuilderTest extends TestCase
         // Passed, with the ignored advisory on the cover and on a page of its own
         $this->assertStringContainsString('<div class="verdict passed">', $html);
         $this->assertMatchesRegularExpression('#<td>\s*1 \(audit\.ignore of composer\.json; they do not fail the audit\)\s*</td>#', $html);
-        $this->assertMatchesRegularExpression('#<h3>1\. Ignored advisories</h3>#', $html);
+        $this->assertMatchesRegularExpression('#<h3>4\. Low</h3>\s*<p class="empty">None</p>\s*</div>\s*<div class="group-list">\s*<h3>5\. Ignored advisories</h3>#', $html);
         $this->assertStringContainsString('<span class="badge ignored">Ignored</span>', $html);
         $this->assertStringContainsString('Windows only: the application runs on Linux', $html);
     }
