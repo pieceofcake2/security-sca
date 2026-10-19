@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 1.0.4
 
 - The audited packages of the report are on two pages, the production packages and the development packages,
   each with the numbers of packages, of direct ones and of vulnerable ones
